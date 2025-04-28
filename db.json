@@ -1,0 +1,275 @@
+{
+  "employees": [
+    {
+      "name": "Girish Ram",
+      "email": "girishram02@gmail.com",
+      "position": "Higher",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        },
+        {
+          "id": 2,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": false
+        }
+      ],
+      "id": 1
+    },
+    {
+      "name": "Aarav Patat",
+      "email": "aarav.patel@example.com",
+      "position": "Manager",
+      "phone": "9876543210",
+      "addresses": [
+        {
+          "id": 2,
+          "street": "22 MG Road",
+          "city": "Mumbai",
+          "state": "Maharashtra",
+          "zipCode": "400001",
+          "isDefault": true
+        }
+      ],
+      "id": 2
+    },
+    {
+      "name": "Diya Mehra",
+      "email": "diya.mehra@example.com",
+      "position": "Developer",
+      "phone": "8765432109",
+      "addresses": [
+        {
+          "id": 3,
+          "street": "14 Ashok Nagar",
+          "city": "Pune",
+          "state": "Maharashtra",
+          "zipCode": "411007",
+          "isDefault": true
+        }
+      ],
+      "id": 3
+    },
+    {
+      "name": "Rohan Iyer",
+      "email": "rohan.iyer@example.com",
+      "position": "Designer",
+      "phone": "7654321098",
+      "addresses": [
+        {
+          "id": 4,
+          "street": "5 Residency Road",
+          "city": "Bangalore",
+          "state": "Karnataka",
+          "zipCode": "560025",
+          "isDefault": true
+        }
+      ],
+      "id": 4
+    },
+    {
+      "name": "Sara Khan",
+      "email": "sara.khan@example.com",
+      "position": "Tester",
+      "phone": "6543210987",
+      "addresses": [
+        {
+          "id": 5,
+          "street": "9 Gandhi Street",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "zipCode": "500003",
+          "isDefault": true
+        }
+      ],
+      "id": 5
+    },
+    {
+      "name": "Neha Reddy",
+      "email": "neha.reddy@example.com",
+      "position": "Admin",
+      "phone": "4321098765",
+      "addresses": [
+        {
+          "id": 7,
+          "street": "12 Lakeview Road",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600042",
+          "isDefault": true
+        }
+      ],
+      "id": 7
+    },
+    {
+      "name": "Kunal Singh",
+      "email": "kunal.singh@example.com",
+      "position": "Support",
+      "phone": "3210987654",
+      "addresses": [
+        {
+          "id": 8,
+          "street": "7 Main Bazar",
+          "city": "Lucknow",
+          "state": "Uttar Pradesh",
+          "zipCode": "226001",
+          "isDefault": true
+        }
+      ],
+      "id": 8
+    },
+    {
+      "name": "Ishita Roy",
+      "email": "ishita.roy@example.com",
+      "position": "Consultant",
+      "phone": "2109876543",
+      "addresses": [
+        {
+          "id": 9,
+          "street": "45 Sector 21",
+          "city": "Noida",
+          "state": "Uttar Pradesh",
+          "zipCode": "201301",
+          "isDefault": true
+        }
+      ],
+      "id": 9
+    },
+    {
+      "name": "Rajeev Menon",
+      "email": "rajeev.menon@example.com",
+      "position": "Intern",
+      "phone": "1098765432",
+      "addresses": [
+        {
+          "id": 10,
+          "street": "8 Clover Apartments",
+          "city": "Kochi",
+          "state": "Kerala",
+          "zipCode": "682020",
+          "isDefault": true
+        }
+      ],
+      "id": 10
+    },
+    {
+      "name": "Simran Kaur",
+      "email": "simran.kaur@example.com",
+      "position": "Lead",
+      "phone": "9988776655",
+      "addresses": [
+        {
+          "id": 11,
+          "street": "12 Banjara Hills",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "zipCode": "500034",
+          "isDefault": true
+        }
+      ],
+      "id": 11
+    },
+    {
+      "name": "Manish Verma",
+      "email": "manish.verma@example.com",
+      "position": "Director",
+      "phone": "8899665544",
+      "addresses": [
+        {
+          "id": 12,
+          "street": "6 Anna Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600040",
+          "isDefault": true
+        }
+      ],
+      "id": 12
+    },
+    {
+      "name": "Pooja Nair",
+      "email": "pooja.nair@example.com",
+      "position": "Analyst",
+      "phone": "7788554433",
+      "addresses": [
+        {
+          "id": 13,
+          "street": "17 Brigade Road",
+          "city": "Bangalore",
+          "state": "Karnataka",
+          "zipCode": "560001",
+          "isDefault": true
+        }
+      ],
+      "id": 13
+    },
+    {
+      "name": "Amit Choudhary",
+      "email": "amit.choudhary@example.com",
+      "position": "Coordinator",
+      "phone": "6677443322",
+      "addresses": [
+        {
+          "id": 14,
+          "street": "23 Patel Nagar",
+          "city": "Delhi",
+          "state": "Delhi",
+          "zipCode": "110008",
+          "isDefault": true
+        }
+      ],
+      "id": 14
+    },
+    {
+      "name": "Meera Joshi",
+      "email": "meera.joshi@example.com",
+      "position": "Researcher",
+      "phone": "5566332211",
+      "addresses": [
+        {
+          "id": 15,
+          "street": "4 Marine Drive",
+          "city": "Mumbai",
+          "state": "Maharashtra",
+          "zipCode": "400020",
+          "isDefault": true
+        }
+      ],
+      "id": 15
+    },
+    {
+      "name": "Girish Ram",
+      "email": "joferej336@leacore.com",
+      "position": "kjhlkj;",
+      "phone": "1231970809",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        },
+        {
+          "id": 2,
+          "street": "",
+          "city": "",
+          "state": "",
+          "zipCode": "",
+          "isDefault": false
+        }
+      ],
+      "id": 16
+    }
+  ]
+}

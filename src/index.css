@@ -1,0 +1,23 @@
+/* You can remove most of your custom CSS as Material UI handles styling */
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Any additional custom styles can go here */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  width: 100%;
+}
+
+.loading-container p {
+  margin-top: 15px;
+  color: #4A90E2;
+  font-weight: 500;
+}
