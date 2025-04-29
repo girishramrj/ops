@@ -28,6 +28,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Badge,
   // Drawer
 } from '@mui/material';
 import {
@@ -38,17 +39,19 @@ import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
   MoreVert as MoreVertIcon,
+  FilterList as FilterListIcon,
   // Cancel as CancelIcon
 } from '@mui/icons-material';
-import { FaFilter } from "react-icons/fa6";
 import api, { Employee } from '../services/api';
 import EmployeeDetails from './EmployeeDetails';
+import EmployeeFilter from './EmployeeFilter';
 
 // Define type for sorting
 type Order = 'asc' | 'desc';
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<{ show: boolean, ids: number[] }>({ show: false, ids: [] });
   const [page, setPage] = useState(1);
@@ -60,6 +63,11 @@ const EmployeeList = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
+  
+  // Filter state
+  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const [availablePositions, setAvailablePositions] = useState<string[]>([]);
 
   const fetchEmployees = async () => {
     try {
@@ -67,6 +75,11 @@ const EmployeeList = () => {
       const startTime = Date.now();
       const data = await api.getAll();
       setEmployees(data);
+      setFilteredEmployees(data);
+      
+      // Extract unique positions for filter
+      const positions = Array.from(new Set(data.map(emp => emp.position))).filter(Boolean) as string[];
+      setAvailablePositions(positions);
       
       // Ensure loader shows for at least 1 second
       const elapsedTime = Date.now() - startTime;
@@ -81,6 +94,20 @@ const EmployeeList = () => {
   useEffect(() => {
     fetchEmployees();
   }, []);
+  
+  // Apply position filters
+  useEffect(() => {
+    if (selectedPositions.length === 0) {
+      setFilteredEmployees(employees);
+    } else {
+      const filtered = employees.filter(emp => 
+        selectedPositions.includes(emp.position)
+      );
+      setFilteredEmployees(filtered);
+    }
+    // Reset to first page when filters change
+    setPage(1);
+  }, [selectedPositions, employees]);
 
   const handleDelete = async () => {
     try {
@@ -146,11 +173,24 @@ const EmployeeList = () => {
       setConfirmDelete({ show: true, ids: selected });
     }
   };
+  
+  // Filter handlers
+  const handleOpenFilter = (event: React.MouseEvent<HTMLElement>) => {
+    setFilterAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseFilter = () => {
+    setFilterAnchorEl(null);
+  };
+
+  const handleFilterChange = (positions: string[]) => {
+    setSelectedPositions(positions);
+  };
 
   // Get current page data with sorting
   const indexOfLastEmployee = page * rowsPerPage;
   const indexOfFirstEmployee = indexOfLastEmployee - rowsPerPage;
-  const sortedEmployees = sortedData(employees);
+  const sortedEmployees = sortedData(filteredEmployees);
   const currentEmployees = sortedEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
 
   if (loading) return (
@@ -213,14 +253,22 @@ const EmployeeList = () => {
               {selected.length} {selected.length === 1 ? 'employee' : 'employees'} selected
             </Typography>
           ) : (
-            <Typography
-              sx={{ flex: '1 1 100%' }}
-              variant="h6"
-              id="tableTitle"
-              component="div"
-            >
-              Employee List
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="h6"
+                id="tableTitle"
+                component="div"
+                sx={{ mr: 2 }}
+              >
+                Employee List
+              </Typography>
+              
+              {selectedPositions.length > 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  ({filteredEmployees.length} of {employees.length} employees)
+                </Typography>
+              )}
+            </Box>
           )}
           
           <Box sx={{ display: 'flex', gap: 1 }}>
@@ -236,9 +284,15 @@ const EmployeeList = () => {
               </Tooltip>
             ) : (
               <>
-                <Tooltip title="Filter">
-                  <IconButton>
-                    <FaFilter />
+                <Tooltip title="Filter by Position">
+                  <IconButton onClick={handleOpenFilter}>
+                    <Badge 
+                      color="primary" 
+                      badgeContent={selectedPositions.length} 
+                      invisible={selectedPositions.length === 0}
+                    >
+                      <FilterListIcon />
+                    </Badge>
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Search">
@@ -260,15 +314,15 @@ const EmployeeList = () => {
           </Box>
         </Toolbar>
         
-        <TableContainer  sx={{ overflowX: 'auto', overflowY:'hidden' }} >
+        <TableContainer sx={{ overflowX: 'auto', overflowY:'hidden' }} >
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f9f9f9' }}>
                 <TableCell padding="checkbox">
-                <Checkbox                    
+                  <Checkbox                    
                     color="primary"
-                    indeterminate={selected.length > 0 && selected.length < employees.length}
-                    checked={employees.length > 0 && selected.length === employees.length}
+                    indeterminate={selected.length > 0 && selected.length < filteredEmployees.length}
+                    checked={filteredEmployees.length > 0 && selected.length === filteredEmployees.length}
                     onChange={handleSelectAllClick}
                     inputProps={{ 'aria-label': 'select all employees' }}
                     sx={{
@@ -364,11 +418,11 @@ const EmployeeList = () => {
           backgroundColor: '#ecf0f1'
         }}>
           <Typography variant="body2" color="text.secondary">
-            Showing {employees.length > 0 ? indexOfFirstEmployee + 1 : 0} to {Math.min(indexOfLastEmployee, employees.length)} of {employees.length} entries
+            Showing {filteredEmployees.length > 0 ? indexOfFirstEmployee + 1 : 0} to {Math.min(indexOfLastEmployee, filteredEmployees.length)} of {filteredEmployees.length} entries
           </Typography>
           
           <Pagination 
-            count={Math.ceil(employees.length / rowsPerPage)} 
+            count={Math.ceil(filteredEmployees.length / rowsPerPage)} 
             page={page}
             onChange={handleChangePage}
             color="primary"
@@ -437,6 +491,16 @@ const EmployeeList = () => {
         open={viewDrawerOpen}
         employee={selectedEmployee}
         onClose={handleCloseViewDrawer}
+      />
+      
+      {/* Position Filter Component */}
+      <EmployeeFilter
+        positions={availablePositions}
+        selectedPositions={selectedPositions}
+        onFilterChange={handleFilterChange}
+        anchorEl={filterAnchorEl}
+        open={Boolean(filterAnchorEl)}
+        onClose={handleCloseFilter}
       />
     </Box>
   );

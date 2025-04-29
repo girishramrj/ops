@@ -377,7 +377,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
                     borderWidth: 2,
                     borderColor: address.isDefault ? 'primary.main' : alpha(theme.palette.divider, 0.8),
                     position: 'relative',
-                    overflow: 'hidden',
+                    overflow: 'visible', // Changed from 'hidden' to 'visible' to prevent chip clipping
                     transition: 'all 0.2s ease-in-out',
                     boxShadow: address.isDefault ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` : '0 2px 8px rgba(0,0,0,0.05)',
                     '&:hover': {
@@ -387,7 +387,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
                     }
                   }}
                 >
-                  <CardContent sx={{ p: 3 }}>
+                  <CardContent sx={{ p: 3, pt: address.isDefault ? 5 : 3 }}> {/* Added top padding when default */}
                     {address.isDefault && (
                       <Chip
                         label="Default"
@@ -395,9 +395,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
                         size="small"
                         sx={{ 
                           position: 'absolute', 
-                          top: 12, 
+                          top: -12, // Changed from 12 to -12 to position above the card
                           right: 12,
-                          fontWeight: 'bold'
+                          fontWeight: 'bold',
+                          zIndex: 1, // Added to ensure chip appears above other elements
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)' // Added subtle shadow
                         }}
                       />
                     )}
