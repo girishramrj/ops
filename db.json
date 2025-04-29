@@ -1,31 +1,6 @@
 {
   "employees": [
     {
-      "name": "Girish Ram",
-      "email": "girishram02@gmail.com",
-      "position": "Higher",
-      "phone": "2345435246",
-      "addresses": [
-        {
-          "id": 1,
-          "street": "3-267, 1St Street, Subramanian Nagar",
-          "city": "Chennai",
-          "state": "Tamil Nadu",
-          "zipCode": "600091",
-          "isDefault": true
-        },
-        {
-          "id": 2,
-          "street": "3-267, 1St Street, Subramanian Nagar",
-          "city": "Chennai",
-          "state": "Tamil Nadu",
-          "zipCode": "600091",
-          "isDefault": false
-        }
-      ],
-      "id": 1
-    },
-    {
       "name": "Aarav Patoot",
       "email": "aarav.patel@example.com",
       "position": "Manager",
@@ -49,23 +24,6 @@
         }
       ],
       "id": 2
-    },
-    {
-      "name": "Diya Mehra",
-      "email": "diya.mehra@example.com",
-      "position": "Developer",
-      "phone": "8765432109",
-      "addresses": [
-        {
-          "id": 3,
-          "street": "14 Ashok Nagar",
-          "city": "Pune",
-          "state": "Maharashtra",
-          "zipCode": "411007",
-          "isDefault": true
-        }
-      ],
-      "id": 3
     },
     {
       "name": "Rohan Iyer",
@@ -303,6 +261,23 @@
         }
       ],
       "id": 17
+    },
+    {
+      "name": "",
+      "email": "",
+      "position": "",
+      "phone": "",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "",
+          "city": "",
+          "state": "",
+          "zipCode": "",
+          "isDefault": true
+        }
+      ],
+      "id": 18
     }
   ]
 }

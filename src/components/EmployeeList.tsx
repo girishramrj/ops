@@ -45,6 +45,7 @@ import {
 import api, { Employee } from '../services/api';
 import EmployeeDetails from './EmployeeDetails';
 import EmployeeFilter from './EmployeeFilter';
+import EmployeeSearch from './EmployeeSearch';
 
 // Define type for sorting
 type Order = 'asc' | 'desc';
@@ -68,6 +69,10 @@ const EmployeeList = () => {
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [availablePositions, setAvailablePositions] = useState<string[]>([]);
+  
+  // Search state
+  const [searchAnchorEl, setSearchAnchorEl] = useState<null | HTMLElement>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   const fetchEmployees = async () => {
     try {
@@ -95,19 +100,29 @@ const EmployeeList = () => {
     fetchEmployees();
   }, []);
   
-  // Apply position filters
+  // Apply position filters and search
   useEffect(() => {
-    if (selectedPositions.length === 0) {
-      setFilteredEmployees(employees);
-    } else {
-      const filtered = employees.filter(emp => 
+    let filtered = employees;
+    
+    // Apply position filter
+    if (selectedPositions.length > 0) {
+      filtered = filtered.filter(emp => 
         selectedPositions.includes(emp.position)
       );
-      setFilteredEmployees(filtered);
     }
+    
+    // Apply search filter
+    if (searchTerm.trim() !== '') {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(emp => 
+        emp.name.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    setFilteredEmployees(filtered);
     // Reset to first page when filters change
     setPage(1);
-  }, [selectedPositions, employees]);
+  }, [selectedPositions, searchTerm, employees]);
 
   const handleDelete = async () => {
     try {
@@ -186,6 +201,19 @@ const EmployeeList = () => {
   const handleFilterChange = (positions: string[]) => {
     setSelectedPositions(positions);
   };
+  
+  // Search handlers
+  const handleOpenSearch = (event: React.MouseEvent<HTMLElement>) => {
+    setSearchAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseSearch = () => {
+    setSearchAnchorEl(null);
+  };
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+  };
 
   // Get current page data with sorting
   const indexOfLastEmployee = page * rowsPerPage;
@@ -263,7 +291,7 @@ const EmployeeList = () => {
                 Employee List
               </Typography>
               
-              {selectedPositions.length > 0 && (
+              {(selectedPositions.length > 0 || searchTerm) && (
                 <Typography variant="body2" color="text.secondary">
                   ({filteredEmployees.length} of {employees.length} employees)
                 </Typography>
@@ -295,9 +323,15 @@ const EmployeeList = () => {
                     </Badge>
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Search">
-                  <IconButton>
-                    <SearchIcon />
+                <Tooltip title="Search by Name">
+                  <IconButton onClick={handleOpenSearch}>
+                    <Badge 
+                      color="primary" 
+                      badgeContent={searchTerm ? 1 : 0} 
+                      invisible={!searchTerm}
+                    >
+                      <SearchIcon />
+                    </Badge>
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Add New Employee">
@@ -501,6 +535,15 @@ const EmployeeList = () => {
         anchorEl={filterAnchorEl}
         open={Boolean(filterAnchorEl)}
         onClose={handleCloseFilter}
+      />
+      
+      {/* Search Component */}
+      <EmployeeSearch
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        anchorEl={searchAnchorEl}
+        open={Boolean(searchAnchorEl)}
+        onClose={handleCloseSearch}
       />
     </Box>
   );
