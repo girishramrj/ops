@@ -8,17 +8,24 @@ import {
   TextField,
   Typography,
   Alert,
-  Stack,
   IconButton,
   Divider,
   Card,
-  CardContent
+  CardContent,
+  Container,
+  Chip,
+  useTheme,
+  alpha,
+  Autocomplete,
+  Stack
 } from '@mui/material';
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
   Add as AddIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Person as PersonIcon,
+  Home as HomeIcon
 } from '@mui/icons-material';
 import api, { Employee } from '../services/api';
 
@@ -37,8 +44,33 @@ interface EmployeeFormProps {
   onSubmitSuccess?: () => void;
 }
 
+// List of available positions
+const positionOptions = [
+  'Software Engineer',
+  'Senior Software Engineer',
+  'Product Manager',
+  'Project Manager',
+  'UI/UX Designer',
+  'Graphic Designer',
+  'Data Scientist',
+  'Data Analyst',
+  'DevOps Engineer',
+  'QA Engineer',
+  'Technical Writer',
+  'Marketing Specialist',
+  'HR Manager',
+  'Finance Manager',
+  'CEO',
+  'CTO',
+  'CFO',
+  'COO',
+  'Sales Representative',
+  'Customer Support Specialist'
+];
+
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Employee & { addresses: Address[] }>({
@@ -94,6 +126,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle position change from Autocomplete
+  const handlePositionChange = (_event: React.SyntheticEvent, newValue: string | null) => {
+    setFormData({ ...formData, position: newValue || '' });
   };
 
   const handleAddressChange = (index: number, field: keyof Address, value: string) => {
@@ -171,125 +208,201 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
   };
 
   if (loading) return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
-      <CircularProgress size={60} />
-      <Typography variant="body1" sx={{ mt: 2 }}>Loading employee data...</Typography>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      height: '400px',
+      backgroundColor: alpha(theme.palette.primary.light, 0.05),
+      borderRadius: 2
+    }}>
+      <CircularProgress size={60} color="primary" />
+      <Typography variant="body1" sx={{ mt: 2, fontWeight: 500 }}>Loading employee data...</Typography>
     </Box>
   );
 
   return (
-    <Paper elevation={3} sx={{ p: 4, maxWidth: 800, mx: 'auto', overflow: 'hidden' }}>
-      <Typography variant="h4" component="h2" gutterBottom>
-        {isEditMode ? 'Edit' : 'Add'} Employee
-      </Typography>
-      
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-      
-      <Box component="form" onSubmit={handleSubmit} noValidate>
-        <Stack spacing={3}>
-          <TextField
-            fullWidth
-            id="name"
-            name="name"
-            label="Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            variant="outlined"
-            autoComplete="name"
-          />
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+        }}
+      >
+        <Box 
+          sx={{ 
+            bgcolor: 'primary.main', 
+            color: 'white', 
+            p: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2
+          }}
+        >
+          <PersonIcon fontSize="large" />
+          <Typography variant="h4" component="h1" fontWeight="500">
+            {isEditMode ? 'Edit' : 'Add'} Employee
+          </Typography>
+        </Box>
+        
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mx: 3, 
+              mt: 3, 
+              borderRadius: 1,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+        
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ p: 3 }}>
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+              <PersonIcon color="primary" sx={{ mr: 1, mt: 0.5 }} />
+              <Typography variant="h6" fontWeight="500">Personal Information</Typography>
+            </Box>
+            <Divider sx={{ mb: 3 }} />
+            
+            <Stack spacing={3}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                <TextField
+                  fullWidth
+                  id="name"
+                  name="name"
+                  label="Full Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  variant="outlined"
+                  autoComplete="name"
+                  InputProps={{
+                    sx: { borderRadius: 1 }
+                  }}
+                />
+                
+                <TextField
+                  fullWidth
+                  id="email"
+                  name="email"
+                  label="Email Address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  type="email"
+                  variant="outlined"
+                  autoComplete="email"
+                  InputProps={{
+                    sx: { borderRadius: 1 }
+                  }}
+                />
+              </Box>
+              
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                <Autocomplete
+                  id="position"
+                  options={positionOptions}
+                  value={formData.position || null}
+                  onChange={handlePositionChange}
+                  freeSolo
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Job Position"
+                      required
+                      variant="outlined"
+                      InputProps={{
+                        ...params.InputProps,
+                        sx: { borderRadius: 1 }
+                      }}
+                    />
+                  )}
+                  sx={{ width: '100%' }}
+                />
+                
+                <TextField
+                  fullWidth
+                  id="phone"
+                  name="phone"
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  variant="outlined"
+                  autoComplete="tel"
+                  InputProps={{
+                    sx: { borderRadius: 1 }
+                  }}
+                />
+              </Box>
+            </Stack>
+          </Box>
           
-          <TextField
-            fullWidth
-            id="email"
-            name="email"
-            label="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            type="email"
-            variant="outlined"
-            autoComplete="email"
-          />
-          
-          <TextField
-            fullWidth
-            id="position"
-            name="position"
-            label="Position"
-            value={formData.position}
-            onChange={handleChange}
-            required
-            variant="outlined"
-          />
-          
-          <TextField
-            fullWidth
-            id="phone"
-            name="phone"
-            label="Phone"
-            value={formData.phone}
-            onChange={handleChange}
-            required
-            variant="outlined"
-            autoComplete="tel"
-          />
-          
-          {/* Addresses Section */}
-          <Box sx={{ mt: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" component="h3">
-                Addresses
-              </Typography>
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <HomeIcon color="primary" sx={{ mr: 1 }} />
+                <Typography variant="h6" fontWeight="500">
+                  Addresses
+                </Typography>
+              </Box>
               <Button 
                 startIcon={<AddIcon />} 
-                variant="outlined" 
+                variant="contained" 
                 onClick={handleAddAddress}
                 size="small"
+                sx={{ 
+                  borderRadius: 1,
+                  boxShadow: 2,
+                }}
               >
                 Add Address
               </Button>
             </Box>
-            
             <Divider sx={{ mb: 3 }} />
             
-            {formData.addresses?.map((address, index) => (
-              <Card 
-                key={address.id} 
-                variant="outlined" 
-                sx={{ 
-                  mb: 2, 
-                  borderColor: address.isDefault ? 'primary.main' : 'divider',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                
-                <CardContent>
-                  {address.isDefault && (
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: 8, 
-                        right: 8, 
-                        bgcolor: 'primary.main', 
-                        color: 'white',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1
-                      }}
-                    >
-                      Default
-                    </Typography>
-                  )}
-                  
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box>
+            <Stack spacing={3}>
+              {formData.addresses?.map((address, index) => (
+                <Card 
+                  key={address.id} 
+                  variant="outlined" 
+                  sx={{ 
+                    borderRadius: 2,
+                    borderWidth: 2,
+                    borderColor: address.isDefault ? 'primary.main' : alpha(theme.palette.divider, 0.8),
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'all 0.2s ease-in-out',
+                    boxShadow: address.isDefault ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` : '0 2px 8px rgba(0,0,0,0.05)',
+                    '&:hover': {
+                      boxShadow: address.isDefault 
+                        ? `0 6px 16px ${alpha(theme.palette.primary.main, 0.25)}` 
+                        : '0 4px 12px rgba(0,0,0,0.1)'
+                    }
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    {address.isDefault && (
+                      <Chip
+                        label="Default"
+                        color="primary"
+                        size="small"
+                        sx={{ 
+                          position: 'absolute', 
+                          top: 12, 
+                          right: 12,
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    )}
+                    
+                    <Stack spacing={3}>
                       <TextField
                         fullWidth
                         label="Street Address"
@@ -297,10 +410,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
                         onChange={(e) => handleAddressChange(index, 'street', e.target.value)}
                         required
                         variant="outlined"
+                        InputProps={{
+                          sx: { borderRadius: 1 }
+                        }}
                       />
-                    </Box>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                      <Box sx={{ flex: '1 1 300px' }}>
+                      
+                      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                         <TextField
                           fullWidth
                           label="City"
@@ -308,61 +423,85 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
                           onChange={(e) => handleAddressChange(index, 'city', e.target.value)}
                           required
                           variant="outlined"
+                          InputProps={{
+                            sx: { borderRadius: 1 }
+                          }}
                         />
+                        
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          <TextField
+                            label="State"
+                            value={address.state}
+                            onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
+                            required
+                            variant="outlined"
+                            InputProps={{
+                              sx: { borderRadius: 1 }
+                            }}
+                            sx={{ width: { xs: '100%', sm: '120px' } }}
+                          />
+                          
+                          <TextField
+                            label="Zip Code"
+                            value={address.zipCode}
+                            onChange={(e) => handleAddressChange(index, 'zipCode', e.target.value)}
+                            required
+                            variant="outlined"
+                            InputProps={{
+                              sx: { borderRadius: 1 }
+                            }}
+                            sx={{ width: { xs: '100%', sm: '120px' } }}
+                          />
+                        </Box>
                       </Box>
-                      <Box sx={{ flex: '1 1 120px' }}>
-                        <TextField
-                          fullWidth
-                          label="State"
-                          value={address.state}
-                          onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
-                          required
-                          variant="outlined"
-                        />
-                      </Box>
-                      <Box sx={{ flex: '1 1 120px' }}>
-                        <TextField
-                          fullWidth
-                          label="Zip Code"
-                          value={address.zipCode}
-                          onChange={(e) => handleAddressChange(index, 'zipCode', e.target.value)}
-                          required
-                          variant="outlined"
-                        />
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      {!address.isDefault && (
-                        <Button 
-                          size="small" 
-                          onClick={() => handleSetDefaultAddress(index)}
-                          color="primary"
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                        {!address.isDefault && (
+                          <Button 
+                            size="small" 
+                            onClick={() => handleSetDefaultAddress(index)}
+                            color="primary"
+                            variant="outlined"
+                            sx={{ borderRadius: 1 }}
+                          >
+                            Set as Default
+                          </Button>
+                        )}
+                        <IconButton 
+                          color="error" 
+                          onClick={() => handleRemoveAddress(index)}
+                          disabled={formData.addresses?.length === 1}
+                          size="small"
+                          sx={{ 
+                            ml: 'auto',
+                            bgcolor: alpha(theme.palette.error.main, 0.1),
+                            '&:hover': {
+                              bgcolor: alpha(theme.palette.error.main, 0.2),
+                            }
+                          }}
                         >
-                          Set as Default
-                        </Button>
-                      )}
-                      <IconButton 
-                        color="error" 
-                        onClick={() => handleRemoveAddress(index)}
-                        disabled={formData.addresses?.length === 1}
-                        size="small"
-                        sx={{ ml: 'auto' }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
           </Box>
           
-          <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2 }}>
+          <Divider sx={{ my: 4 }} />
+          
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button
               type="button"
               variant="outlined"
               startIcon={<CancelIcon />}
               onClick={() => navigate('/')}
+              sx={{ 
+                borderRadius: 1,
+                px: 3
+              }}
             >
               Cancel
             </Button>
@@ -371,13 +510,18 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
               variant="contained"
               color="primary"
               startIcon={<SaveIcon />}
+              sx={{ 
+                borderRadius: 1,
+                px: 3,
+                boxShadow: 2
+              }}
             >
-              {isEditMode ? 'Update' : 'Save'}
+              {isEditMode ? 'Update' : 'Save'} Employee
             </Button>
-          </Stack>
-        </Stack>
-      </Box>
-    </Paper>
+          </Box>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

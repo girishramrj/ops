@@ -28,7 +28,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Drawer
+  // Drawer
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -38,10 +38,11 @@ import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
   MoreVert as MoreVertIcon,
-  Cancel as CancelIcon
+  // Cancel as CancelIcon
 } from '@mui/icons-material';
 import { FaFilter } from "react-icons/fa6";
 import api, { Employee } from '../services/api';
+import EmployeeDetails from './EmployeeDetails';
 
 // Define type for sorting
 type Order = 'asc' | 'desc';
@@ -192,8 +193,8 @@ const EmployeeList = () => {
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2, borderRadius: '8px', overflow: 'auto', overflowY:'hidden' }}>
+    <Box sx={{ width: '100%' , overflowX: 'auto', overflowY:'hidden'}}>
+      <Paper sx={{ width: '100%', mb: 2, borderRadius: '8px', overflowX: 'auto', overflowY:'hidden' }}>
         <Toolbar sx={{ 
           pl: { sm: 2 }, 
           pr: { xs: 1, sm: 1 },
@@ -259,7 +260,7 @@ const EmployeeList = () => {
           </Box>
         </Toolbar>
         
-        <TableContainer>
+        <TableContainer  sx={{ overflowX: 'auto', overflowY:'hidden' }} >
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f9f9f9' }}>
@@ -431,83 +432,12 @@ const EmployeeList = () => {
         </MenuItem>
       </Menu>
 
-      {/* Employee Details Drawer */}
-      <Drawer
-        anchor="right"
+      {/* Employee Details Component */}
+      <EmployeeDetails 
         open={viewDrawerOpen}
+        employee={selectedEmployee}
         onClose={handleCloseViewDrawer}
-        PaperProps={{
-          sx: { width: { xs: '100%', sm: 400 }, p: 3 }
-        }}
-      >
-        {selectedEmployee && (
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h5" component="h2">Employee Details</Typography>
-              <IconButton onClick={handleCloseViewDrawer} size="small">
-                <CancelIcon />
-              </IconButton>
-            </Box>
-            
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary">Name</Typography>
-              <Typography variant="body1">{selectedEmployee.name}</Typography>
-            </Box>
-            
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary">Email</Typography>
-              <Typography variant="body1">{selectedEmployee.email}</Typography>
-            </Box>
-            
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary">Position</Typography>
-              <Typography variant="body1">{selectedEmployee.position}</Typography>
-            </Box>
-            
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary">Phone</Typography>
-              <Typography variant="body1">{selectedEmployee.phone}</Typography>
-            </Box>
-            
-            {selectedEmployee.addresses && selectedEmployee.addresses.length > 0 && (
-              <Box>
-                <Typography variant="subtitle1" sx={{ mb: 2 }}>Addresses</Typography>
-                {selectedEmployee.addresses.map((address, index) => (
-                  <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2 }}>
-                    {address.isDefault && (
-                      <Typography variant="caption" sx={{ display: 'inline-block', bgcolor: 'primary.main', color: 'white', px: 1, py: 0.5, borderRadius: 1, mb: 1 }}>
-                        Default
-                      </Typography>
-                    )}
-                    <Typography variant="body2">{address.street}</Typography>
-                    <Typography variant="body2">{address.city}, {address.state} {address.zipCode}</Typography>
-                  </Paper>
-                ))}
-              </Box>
-            )}
-            
-            <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-              <Button 
-                variant="outlined" 
-                startIcon={<EditIcon />} 
-                onClick={() => {
-                  handleCloseViewDrawer();
-                  navigate(`/edit/${selectedEmployee.id}`);
-                }}
-              >
-                Edit
-              </Button>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={handleCloseViewDrawer}
-              >
-                Close
-              </Button>
-            </Box>
-          </Box>
-        )}
-      </Drawer>
+      />
     </Box>
   );
 };
