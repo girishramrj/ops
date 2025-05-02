@@ -99,6 +99,22 @@ const personalInfoSchema = z.object({
   position: z.string().min(1, "Position is required")
 });
 
+// Personal information validation schema using Yup for Formik
+const personalInfoYupSchema = Yup.object().shape({
+  name: Yup.string()
+    .required('Name is required')
+    .matches(/^[A-Za-z\s]+$/, 'Name must contain only alphabets'),
+  email: Yup.string()
+    .required('Email is required')
+    .email('Invalid email format')
+    .test('has-at', 'Email must contain @ symbol', value => value?.includes('@')),
+  phone: Yup.string()
+    .required('Phone number is required')
+    .length(10, 'Phone number must be exactly 10 digits')
+    .matches(/^\d+$/, 'Phone number must contain only digits'),
+  position: Yup.string().required('Position is required')
+});
+
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -467,157 +483,204 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
           </Alert>
         )}
         
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ p: 3 }}>
-          <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
-              <PersonIcon color="primary" sx={{ mr: 1, mt: 0.5 }} />
-              <Typography variant="h6" fontWeight="500">Personal Information</Typography>
-            </Box>
-            <Divider sx={{ mb: 3 }} />
+        <Formik
+          initialValues={{
+            name: formData.name,
+            email: formData.email,
+            position: formData.position,
+            phone: formData.phone
+          }}
+          validationSchema={personalInfoYupSchema}
+          enableReinitialize
+          onSubmit={(values) => {
+            // Update formData with Formik values
+            setFormData({
+              ...formData,
+              name: values.name,
+              email: values.email,
+              position: values.position,
+              phone: values.phone
+            });
             
-            <Stack spacing={3}>
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                <TextField
-                  fullWidth
-                  id="name"
-                  name="name"
-                  label="Full Name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  variant="outlined"
-                  autoComplete="name"
-                  InputProps={{
-                    sx: { borderRadius: 1 }
-                  }}
-                />
+            // Call the existing submit handler
+            handleSubmit(new Event('submit') as React.FormEvent);
+          }}
+        >
+          {({ values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue }) => (
+            <Form onSubmit={handleSubmit}>
+              <Box sx={{ p: 3 }}>
+                <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+                    <PersonIcon color="primary" sx={{ mr: 1, mt: 0.5 }} />
+                    <Typography variant="h6" fontWeight="500">Personal Information</Typography>
+                  </Box>
+                  <Divider sx={{ mb: 3 }} />
+                  
+                  <Stack spacing={3}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                      <TextField
+                        fullWidth
+                        id="name"
+                        name="name"
+                        label="Full Name"
+                        value={values.name}
+                        onChange={(e) => {
+                          // Apply capitalization before setting the field value
+                          const capitalizedName = capitalizeWords(e.target.value);
+                          setFieldValue('name', capitalizedName);
+                        }}
+                        onBlur={handleBlur}
+                        error={touched.name && Boolean(errors.name)}
+                        helperText={touched.name && errors.name}
+                        required
+                        variant="outlined"
+                        autoComplete="name"
+                        InputProps={{
+                          sx: { borderRadius: 1 }
+                        }}
+                      />
+                      
+                      <TextField
+                        fullWidth
+                        id="email"
+                        name="email"
+                        label="Email Address"
+                        value={values.email}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.email && Boolean(errors.email)}
+                        helperText={touched.email && errors.email}
+                        required
+                        type="email"
+                        variant="outlined"
+                        autoComplete="email"
+                        InputProps={{
+                          sx: { borderRadius: 1 }
+                        }}
+                      />
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                      <Autocomplete
+                        id="position"
+                        options={positionOptions}
+                        value={values.position || null}
+                        onChange={(_event, newValue) => {
+                          setFieldValue('position', newValue || '');
+                        }}
+                        freeSolo
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            name="position"
+                            label="Job Position"
+                            required
+                            variant="outlined"
+                            error={touched.position && Boolean(errors.position)}
+                            helperText={touched.position && errors.position}
+                            onBlur={handleBlur}
+                            InputProps={{
+                              ...params.InputProps,
+                              sx: { borderRadius: 1 }
+                            }}
+                          />
+                        )}
+                        sx={{ width: '100%' }}
+                      />
+                      
+                      <TextField
+                        fullWidth
+                        id="phone"
+                        name="phone"
+                        label="Phone Number"
+                        value={values.phone}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.phone && Boolean(errors.phone)}
+                        helperText={touched.phone && errors.phone}
+                        required
+                        variant="outlined"
+                        autoComplete="tel"
+                        InputProps={{
+                          sx: { borderRadius: 1 }
+                        }}
+                      />
+                    </Box>
+                  </Stack>
+                </Box>
                 
-                <TextField
-                  fullWidth
-                  id="email"
-                  name="email"
-                  label="Email Address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  type="email"
-                  variant="outlined"
-                  autoComplete="email"
-                  InputProps={{
-                    sx: { borderRadius: 1 }
-                  }}
-                />
-              </Box>
-              
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                <Autocomplete
-                  id="position"
-                  options={positionOptions}
-                  value={formData.position || null}
-                  onChange={handlePositionChange}
-                  freeSolo
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Job Position"
-                      required
-                      variant="outlined"
-                      InputProps={{
-                        ...params.InputProps,
-                        sx: { borderRadius: 1 }
+                {/* Addresses section - modified to use AddressTable */}
+                <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <HomeIcon color="primary" sx={{ mr: 1 }} />
+                      <Typography variant="h6" fontWeight="500">
+                        Addresses
+                      </Typography>
+                    </Box>
+                    <Button 
+                      aria-label="Add Address"
+                      variant="contained" 
+                      onClick={handleAddNewAddress}
+                      size="small"
+                      sx={{ 
+                        borderRadius: 1,
+                        boxShadow: 2,
+                        minWidth: 'auto',
+                        p: 1
                       }}
-                    />
-                  )}
-                  sx={{ width: '100%' }}
-                />
+                    >
+                      <AddIcon />
+                    </Button>
+                  </Box>
+                  <Divider sx={{ mb: 3 }} />
+                  
+                  {/* Address Table */}
+                  <AddressTable 
+                    addresses={formData.addresses}
+                    onEdit={handleEditAddress}
+                    onDelete={handleRemoveAddress}
+                    onSetDefault={handleSetDefaultAddress}
+                  />
+                </Box>
                 
-                <TextField
-                  fullWidth
-                  id="phone"
-                  name="phone"
-                  label="Phone Number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  variant="outlined"
-                  autoComplete="tel"
-                  InputProps={{
-                    sx: { borderRadius: 1 }
-                  }}
-                />
+                <Divider sx={{ my: 4 }} />
+                
+                {/* Form buttons */}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    color="inherit"
+                    aria-label="Cancel"
+                    onClick={() => navigate('/')}
+                    sx={{ 
+                      borderRadius: 1,
+                      minWidth: 'auto',
+                      p: 1.5
+                    }}
+                  >
+                    <CancelIcon />
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    aria-label={isEditMode ? 'Update Employee' : 'Save Employee'}
+                    sx={{ 
+                      borderRadius: 1,
+                      minWidth: 'auto',
+                      p: 1.5,
+                      boxShadow: 2
+                    }}
+                  >
+                    <SaveIcon />
+                  </Button>
+                </Box>
               </Box>
-            </Stack>
-          </Box>
-          
-          {/* Addresses section - modified to use AddressTable */}
-          <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <HomeIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6" fontWeight="500">
-                  Addresses
-                </Typography>
-              </Box>
-              <Button 
-                aria-label="Add Address"
-                variant="contained" 
-                onClick={handleAddNewAddress}
-                size="small"
-                sx={{ 
-                  borderRadius: 1,
-                  boxShadow: 2,
-                  minWidth: 'auto',
-                  p: 1
-                }}
-              >
-                <AddIcon />
-              </Button>
-            </Box>
-            <Divider sx={{ mb: 3 }} />
-            
-            {/* Address Table */}
-            <AddressTable 
-              addresses={formData.addresses}
-              onEdit={handleEditAddress}
-              onDelete={handleRemoveAddress}
-              onSetDefault={handleSetDefaultAddress}
-            />
-          </Box>
-          
-          <Divider sx={{ my: 4 }} />
-          
-          {/* Form buttons - unchanged */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button
-              type="button"
-              variant="outlined"
-              color="inherit"
-              aria-label="Cancel"
-              onClick={() => navigate('/')}
-              sx={{ 
-                borderRadius: 1,
-                minWidth: 'auto',
-                p: 1.5
-              }}
-            >
-              <CancelIcon />
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              aria-label={isEditMode ? 'Update Employee' : 'Save Employee'}
-              sx={{ 
-                borderRadius: 1,
-                minWidth: 'auto',
-                p: 1.5,
-                boxShadow: 2
-              }}
-            >
-              <SaveIcon />
-            </Button>
-          </Box>
-        </Box>
+            </Form>
+          )}
+        </Formik>
       </Paper>
       
       {/* Address Edit Dialog with Formik */}
