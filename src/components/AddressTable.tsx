@@ -170,7 +170,7 @@ const AddressTable: React.FC<AddressTableProps> = ({
                         </IconButton>
                         <IconButton 
                           size="small" 
-                          color="error" 
+                          color="primary" 
                           onClick={() => handleDeleteClick(index)}
                           disabled={addresses.length <= 1}
                         >

@@ -130,6 +130,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
 
   const isEditMode = !!id;
 
+  // Function to capitalize first letter of each word
+  const capitalizeWords = (str: string): string => {
+    return str
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
   // Add the handleEditAddress function
   const handleEditAddress = (index: number) => {
     setEditingAddressIndex(index);
@@ -233,7 +241,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
   }, [id, isEditMode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // If the field is "name", capitalize the first letter of each word
+    if (name === 'name') {
+      setFormData({ ...formData, [name]: capitalizeWords(value) });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   // Handle position change from Autocomplete
