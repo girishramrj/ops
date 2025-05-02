@@ -47,13 +47,13 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
 
   const handleApplyFilter = () => {
     onFilterChange(localSelectedPositions);
-    onClose();
+    // Removed the onClose() call to keep the filter panel open
   };
 
   const handleClearFilter = () => {
     setLocalSelectedPositions([]);
     onFilterChange([]);
-    onClose();
+    // Removed the onClose() call to keep the filter panel open
   };
 
   const handleRemovePosition = (position: string) => {
