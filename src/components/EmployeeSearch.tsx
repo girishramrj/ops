@@ -1,27 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
-  Popover,
-  Typography,
   TextField,
-  Button,
-  Divider,
-  useTheme,
-  alpha,
+  InputAdornment,
   IconButton,
-  InputAdornment
+  Paper,
+  Collapse,
+  useTheme,
+  alpha
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Close as CloseIcon,
-  Clear as ClearIcon
+  Close as CloseIcon
 } from '@mui/icons-material';
 
-// Define props interface
 interface EmployeeSearchProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
-  anchorEl: HTMLElement | null;
   open: boolean;
   onClose: () => void;
 }
@@ -29,132 +24,81 @@ interface EmployeeSearchProps {
 const EmployeeSearch: React.FC<EmployeeSearchProps> = ({
   searchTerm,
   onSearchChange,
-  anchorEl,
   open,
   onClose
 }) => {
   const theme = useTheme();
   const [localSearchTerm, setLocalSearchTerm] = useState<string>(searchTerm);
-  
-  // Update local state when props change
-  useEffect(() => {
-    setLocalSearchTerm(searchTerm);
-  }, [searchTerm]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalSearchTerm(event.target.value);
-  };
-
-  const handleApplySearch = () => {
-    onSearchChange(localSearchTerm);
-    onClose();
+    const newTerm = event.target.value;
+    setLocalSearchTerm(newTerm);
+    onSearchChange(newTerm);
   };
 
   const handleClearSearch = () => {
     setLocalSearchTerm('');
     onSearchChange('');
-    onClose();
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleApplySearch();
-    }
   };
 
   return (
-    <Popover
-      open={open}
-      anchorEl={anchorEl}
-      onClose={onClose}
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      PaperProps={{
-        elevation: 3,
-        sx: {
-          width: 320,
-          p: 2,
-          borderRadius: 2,
-          overflow: 'hidden'
-        }
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <SearchIcon color="primary" sx={{ mr: 1 }} />
-          <Typography variant="h6" fontWeight="500">
-            Search Employees
-          </Typography>
-        </Box>
-        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
-      
-      <Divider sx={{ mb: 2 }} />
-      
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Search by Name
-      </Typography>
-      
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Enter employee name"
-        value={localSearchTerm}
-        onChange={handleSearchChange}
-        onKeyDown={handleKeyDown}
-        size="small"
-        autoFocus
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" color="action" />
-            </InputAdornment>
-          ),
-          endAdornment: localSearchTerm ? (
-            <InputAdornment position="end">
-              <IconButton
-                size="small"
-                onClick={() => setLocalSearchTerm('')}
-                edge="end"
-              >
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ) : null,
-          sx: { borderRadius: 1 }
+    <Collapse in={open} timeout="auto" unmountOnExit>
+      <Paper
+        elevation={2}
+        sx={{
+          p: 1,
+          mb: 1,
+          mx: 2,
+          borderRadius: 1,
+          backgroundColor: alpha(theme.palette.background.paper, 0.95),
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
         }}
-        sx={{ mb: 3 }}
-      />
-      
-      <Divider sx={{ mb: 2 }} />
-      
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button 
-          variant="outlined" 
-          size="small" 
-          onClick={handleClearSearch}
-          sx={{ borderRadius: 1 }}
-        >
-          Clear
-        </Button>
-        <Button 
-          variant="contained" 
-          size="small" 
-          onClick={handleApplySearch}
-          sx={{ borderRadius: 1 }}
-        >
-          Search
-        </Button>
-      </Box>
-    </Popover>
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Search employees..."
+            value={localSearchTerm}
+            onChange={handleSearchChange}
+            variant="outlined"
+            autoFocus
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: localSearchTerm && (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={handleClearSearch}
+                    sx={{ p: 0.5 }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+              sx: {
+                borderRadius: 1,
+                fontSize: '0.875rem',
+                pr: localSearchTerm ? 0.5 : 1
+              }
+            }}
+            sx={{ flex: 1 }}
+          />
+          <IconButton
+            size="small"
+            onClick={onClose}
+            sx={{ ml: 1, color: 'text.secondary' }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Paper>
+    </Collapse>
   );
 };
 

@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,15 +12,9 @@ import {
   DialogTitle,
   IconButton,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
   CircularProgress,
-  Pagination,
+  // Pagination, // Remove this import
   Toolbar,
   Tooltip,
   Menu,
@@ -29,6 +22,7 @@ import {
   ListItemIcon,
   ListItemText,
   Badge,
+  SelectChangeEvent,
   // Drawer
 } from '@mui/material';
 import {
@@ -38,41 +32,48 @@ import {
   DeleteSweep as DeleteMultipleIcon,
   Search as SearchIcon,
   Visibility as VisibilityIcon,
-  MoreVert as MoreVertIcon,
   FilterList as FilterListIcon,
   // Cancel as CancelIcon
 } from '@mui/icons-material';
 import api, { Employee } from '../services/api';
-import EmployeeDetails from './EmployeeDetails';
+// import EmployeeDetails from './EmployeeDetails';
 import EmployeeFilter from './EmployeeFilter';
 import EmployeeSearch from './EmployeeSearch';
+import CustomPagination from './custompagination';
+import EmployeeTable from './EmployeeTable';
+import { useTheme } from '@mui/material/styles';
+// import { isDarkMode } from '../utils/colorUtils';
 
 // Define type for sorting
 type Order = 'asc' | 'desc';
 
+// In the EmployeeList component
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<{ show: boolean, ids: number[] }>({ show: false, ids: [] });
   const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [order] = useState<Order>('asc');
   const [orderBy] = useState<keyof Employee>('name');
   const [selected, setSelected] = useState<number[]>([]);
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
-  
+  // const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   // Filter state
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  const [, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [availablePositions, setAvailablePositions] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
   
   // Search state
-  const [searchAnchorEl, setSearchAnchorEl] = useState<null | HTMLElement>(null);
+  const [, setSearchAnchorEl] = useState<null | HTMLElement>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -83,7 +84,7 @@ const EmployeeList = () => {
       setFilteredEmployees(data);
       
       // Extract unique positions for filter
-      const positions = Array.from(new Set(data.map(emp => emp.position))).filter(Boolean) as string[];
+      const positions = Array.from(new Set(data.map((emp: Employee) => emp.position))).filter(Boolean) as string[];
       setAvailablePositions(positions);
       
       // Ensure loader shows for at least 1 second
@@ -142,6 +143,11 @@ const EmployeeList = () => {
     setPage(newPage);
   };
 
+  const handleChangeRowsPerPage = (event: SelectChangeEvent<number>) => {
+    setRowsPerPage(Number(event.target.value));
+    setPage(1); // Reset to first page when changing rows per page
+  };
+
   // Function to sort data
   const sortedData = (data: Employee[]) => {
     return [...data].sort((a, b) => {
@@ -191,23 +197,32 @@ const EmployeeList = () => {
   
   // Filter handlers
   const handleOpenFilter = (event: React.MouseEvent<HTMLElement>) => {
+    setFilterOpen(!filterOpen);
     setFilterAnchorEl(event.currentTarget);
+    // Close search if open
+    setSearchOpen(false);
   };
 
   const handleCloseFilter = () => {
+    setFilterOpen(false);
     setFilterAnchorEl(null);
   };
-
+  
+  // Add this function to handle filter changes
   const handleFilterChange = (positions: string[]) => {
     setSelectedPositions(positions);
   };
-  
+
   // Search handlers
   const handleOpenSearch = (event: React.MouseEvent<HTMLElement>) => {
+    setSearchOpen(!searchOpen);
     setSearchAnchorEl(event.currentTarget);
+    // Close filter if open
+    setFilterOpen(false);
   };
 
   const handleCloseSearch = () => {
+    setSearchOpen(false);
     setSearchAnchorEl(null);
   };
 
@@ -239,12 +254,14 @@ const EmployeeList = () => {
 
   const handleViewEmployee = () => {
     handleMenuClose();
-    setViewDrawerOpen(true);
+    if (selectedEmployee) {
+      navigate(`/employee/${selectedEmployee.id}`);
+    }
   };
 
-  const handleCloseViewDrawer = () => {
-    setViewDrawerOpen(false);
-  };
+  // const handleCloseViewDrawer = () => {
+  //   setViewDrawerOpen(false);
+  // };
 
   const handleEditEmployee = () => {
     handleMenuClose();
@@ -266,10 +283,14 @@ const EmployeeList = () => {
         <Toolbar sx={{ 
           pl: { sm: 2 }, 
           pr: { xs: 1, sm: 1 },
-          bgcolor: selected.length > 0 ? 'rgba(25, 118, 210, 0.12)' : '#f5f5f5',
+          // bgcolor: selected.length > 0 ? 'rgba(25, 118, 210, 0.12)' : '#f5f5f5',
           borderBottom: '1px solid #e0e0e0',
           display: 'flex',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          bgcolor: isDarkMode ? '#000000' : 'transparent',
+              color: isDarkMode ? '#ffffff' : 'inherit',
+              px: isDarkMode ? 1 : 0,
+              py: isDarkMode ? 0.5 : 0
         }}>
           {selected.length > 0 ? (
             <Typography
@@ -281,167 +302,101 @@ const EmployeeList = () => {
               {selected.length} {selected.length === 1 ? 'employee' : 'employees'} selected
             </Typography>
           ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', }}>
               <Typography
                 variant="h6"
                 id="tableTitle"
                 component="div"
-                sx={{ mr: 2 }}
+                sx={{ 
+                  mr: 2,
+                  bgcolor: isDarkMode ? '#000000' : 'transparent',
+                  color: isDarkMode ? '#ffffff' : 'inherit',
+                  px: isDarkMode ? 1 : 0,
+                  py: isDarkMode ? 0.5 : 0,
+                  borderRadius: isDarkMode ? 1 : 0
+                }}
               >
                 Employee List
               </Typography>
               
-              {(selectedPositions.length > 0 || searchTerm) && (
-                <Typography variant="body2" color="text.secondary">
-                  ({filteredEmployees.length} of {employees.length} employees)
-                </Typography>
-              )}
+              {/* Search button moved outside */}
+              <Tooltip title="Search">
+                <IconButton 
+                  onClick={handleOpenSearch}
+                  color={searchOpen || searchTerm ? "primary" : "default"}
+                >
+                  <SearchIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
           )}
           
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          {/* Right side actions */}
+          <Box>
             {selected.length > 0 ? (
-              <Tooltip title="Delete Selected">
-                <IconButton 
-                  color="error" 
-                  onClick={handleDeleteSelected}
-                  size="medium"
-                >
+              <Tooltip title="Delete selected">
+                <IconButton onClick={handleDeleteSelected}>
                   <DeleteMultipleIcon />
                 </IconButton>
               </Tooltip>
             ) : (
-              <>
-                <Tooltip title="Filter by Position">
-                  <IconButton onClick={handleOpenFilter}>
-                    <Badge 
-                      color="primary" 
-                      badgeContent={selectedPositions.length} 
+              <Box sx={{ display: 'flex' }}>
+                {/* Filter icon moved next to Add icon */}
+                <Tooltip title="Filter">
+                  <IconButton 
+                    onClick={handleOpenFilter}
+                    color={filterOpen || selectedPositions.length > 0 ? "primary" : "default"}
+                    sx={{ mr: 1 }}
+                  >
+                    <Badge
+                      badgeContent={selectedPositions.length}
+                      color="primary"
                       invisible={selectedPositions.length === 0}
                     >
                       <FilterListIcon />
                     </Badge>
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Search by Name">
-                  <IconButton onClick={handleOpenSearch}>
-                    <Badge 
-                      color="primary" 
-                      badgeContent={searchTerm ? 1 : 0} 
-                      invisible={!searchTerm}
-                    >
-                      <SearchIcon />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Add New Employee">
+                <Tooltip title="Add employee">
                   <IconButton 
-                    color="primary" 
                     onClick={() => navigate('/add')}
-                    size="medium"
+                    color="primary"
                   >
                     <AddIcon />
                   </IconButton>
                 </Tooltip>
-              </>
+              </Box>
             )}
           </Box>
         </Toolbar>
         
-        <TableContainer sx={{ overflowX: 'auto', overflowY:'hidden' }} >
-          <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#f9f9f9' }}>
-                <TableCell padding="checkbox">
-                  <Checkbox                    
-                    color="primary"
-                    indeterminate={selected.length > 0 && selected.length < filteredEmployees.length}
-                    checked={filteredEmployees.length > 0 && selected.length === filteredEmployees.length}
-                    onChange={handleSelectAllClick}
-                    inputProps={{ 'aria-label': 'select all employees' }}
-                    sx={{
-                      '& .MuiSvgIcon-root': { fontSize: 24 },
-                      '& .PrivateSwitchBase-input': {
-                        position: 'absolute',
-                        top: '12px',
-                        left: '12px',
-                        zIndex: 1,
-                        opacity: 0,
-                        width: '18px',
-                        height: '18px'
-                      }
-                    }}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold', borderBottom: '1px solid #e0e0e0' }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', borderBottom: '1px solid #e0e0e0' }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', borderBottom: '1px solid #e0e0e0' }}>Position</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', borderBottom: '1px solid #e0e0e0' }}>Phone</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', borderBottom: '1px solid #e0e0e0' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {currentEmployees.map((employee) => {
-                const isItemSelected = isSelected(employee.id!);
-                return (
-                  <TableRow
-                    hover
-                    key={employee.id}
-                    selected={isItemSelected}
-                    sx={{ 
-                      borderBottom: '1px solid #e0e0e0',
-                      '&:last-child': { borderBottom: '1px solid #e0e0e0' }
-                    }}
-                  >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        onChange={() => handleCheckboxClick(employee.id!)}
-                        inputProps={{ 'aria-labelledby': `employee-${employee.id}` }}
-                        sx={{
-                          '& .MuiSvgIcon-root': { fontSize: 24 },
-                          '& .PrivateSwitchBase-input': {
-                            position: 'absolute',
-                            top: '12px',
-                            left: '12px',
-                            zIndex: 1,
-                            opacity: 0,
-                            width: '100%',
-                            height: '100%'
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell component="th" scope="row" sx={{ pl: 2 }} id={`employee-${employee.id}`}>
-                      {employee.name}
-                    </TableCell>
-                    <TableCell>{employee.email}</TableCell>
-                    <TableCell>{employee.position}</TableCell>
-                    <TableCell>{employee.phone}</TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <IconButton 
-                          size="small"
-                          onClick={(event) => handleMenuOpen(event, employee)}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {currentEmployees.length === 0 && (
-                <TableRow sx={{ borderBottom: '1px solid #e0e0e0' }}>
-                  <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                    <Typography variant="body1">No employees found. Add some employees to get started.</Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {/* Search component */}
+        <EmployeeSearch
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          open={searchOpen}
+          onClose={handleCloseSearch}
+        />
+        
+        {/* Filter component */}
+        <EmployeeFilter
+          positions={availablePositions}
+          selectedPositions={selectedPositions}
+          onFilterChange={handleFilterChange}
+          open={filterOpen}
+          onClose={handleCloseFilter}
+        />
+        
+        {/* Table content */}
+        <EmployeeTable 
+          currentEmployees={currentEmployees}
+          selected={selected}
+          isSelected={isSelected}
+          handleCheckboxClick={handleCheckboxClick}
+          handleSelectAllClick={handleSelectAllClick}
+          handleMenuOpen={handleMenuOpen}
+          filteredEmployees={filteredEmployees}
+        />
         
         <Box sx={{ 
           display: 'flex', 
@@ -449,20 +404,33 @@ const EmployeeList = () => {
           alignItems: 'center',
           p: 2,
           borderTop: '1px solid #e0e0e0',
-          backgroundColor: '#ecf0f1'
+          // backgroundColor: '#ecf0f1',
+          bgcolor: isDarkMode ? '#000000' : 'transparent',
+                  color: isDarkMode ? '#ffffff' : 'inherit',
+                  px: isDarkMode ? 1 : 0,
+                  py: isDarkMode ? 0.5 : 0
         }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{
+              bgcolor: isDarkMode ? '#000000' : 'transparent',
+              color: isDarkMode ? '#ffffff' : 'inherit',
+              px: isDarkMode ? 1 : 0,
+              py: isDarkMode ? 0.5 : 0,
+              borderRadius: isDarkMode ? 1 : 0
+            }}
+          >
             Showing {filteredEmployees.length > 0 ? indexOfFirstEmployee + 1 : 0} to {Math.min(indexOfLastEmployee, filteredEmployees.length)} of {filteredEmployees.length} entries
           </Typography>
           
-          <Pagination 
-            count={Math.ceil(filteredEmployees.length / rowsPerPage)} 
+          <CustomPagination
             page={page}
-            onChange={handleChangePage}
-            color="primary"
-            shape="rounded"
-            showFirstButton
-            showLastButton
+            rowsPerPage={rowsPerPage}
+            count={filteredEmployees.length}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
           />
         </Box>
       </Paper>
@@ -520,14 +488,18 @@ const EmployeeList = () => {
         </MenuItem>
       </Menu>
 
-      {/* Employee Details Component */}
+      {/* Remove or comment out the Employee Details Component */}
+      {/* 
       <EmployeeDetails 
         open={viewDrawerOpen}
         employee={selectedEmployee}
         onClose={handleCloseViewDrawer}
       />
+      */}
       
+      {/* Remove these commented out and duplicate components */}
       {/* Position Filter Component */}
+      {/* 
       <EmployeeFilter
         positions={availablePositions}
         selectedPositions={selectedPositions}
@@ -536,8 +508,10 @@ const EmployeeList = () => {
         open={Boolean(filterAnchorEl)}
         onClose={handleCloseFilter}
       />
+      */}
       
-      {/* Search Component */}
+      {/* Remove this duplicate Search Component */}
+      {/* 
       <EmployeeSearch
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
@@ -545,6 +519,7 @@ const EmployeeList = () => {
         open={Boolean(searchAnchorEl)}
         onClose={handleCloseSearch}
       />
+      */}
     </Box>
   );
 };

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Popover,
   Typography,
   Autocomplete,
   TextField,
@@ -10,10 +9,11 @@ import {
   Divider,
   useTheme,
   alpha,
-  IconButton
+  Collapse,
+  Paper,
+  Stack
 } from '@mui/material';
 import {
-  FilterList as FilterIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
 
@@ -22,7 +22,6 @@ interface EmployeeFilterProps {
   positions: string[];
   selectedPositions: string[];
   onFilterChange: (positions: string[]) => void;
-  anchorEl: HTMLElement | null;
   open: boolean;
   onClose: () => void;
 }
@@ -31,7 +30,6 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
   positions,
   selectedPositions,
   onFilterChange,
-  anchorEl,
   open,
   onClose
 }) => {
@@ -64,119 +62,116 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
   };
 
   return (
-    <Popover
-      open={open}
-      anchorEl={anchorEl}
-      onClose={onClose}
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      PaperProps={{
-        elevation: 3,
-        sx: {
-          width: 320,
-          p: 2,
-          borderRadius: 2,
-          overflow: 'hidden'
-        }
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <FilterIcon color="primary" sx={{ mr: 1 }} />
-          <Typography variant="h6" fontWeight="500">
-            Filter Employees
+    <Collapse in={open} timeout="auto" unmountOnExit>
+      <Paper 
+        elevation={2}
+        sx={{
+          p: 1.5,
+          mb: 1,
+          mx: 2,
+          borderRadius: 1,
+          backgroundColor: alpha(theme.palette.background.paper, 0.95),
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="subtitle2" fontWeight="500">
+            Filter by Position
           </Typography>
+          <Button 
+            size="small" 
+            onClick={onClose}
+            startIcon={<CloseIcon fontSize="small" />}
+            sx={{ color: 'text.secondary', minWidth: 'auto', p: 0.5 }}
+          >
+            Close
+          </Button>
         </Box>
-        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
-      
-      <Divider sx={{ mb: 2 }} />
-      
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Position
-      </Typography>
-      
-      <Autocomplete
-        multiple
-        id="position-filter"
-        options={positions}
-        value={localSelectedPositions}
-        onChange={handlePositionChange}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="outlined"
-            placeholder="Select positions"
+        
+        <Divider sx={{ my: 1 }} />
+        
+        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+          <Autocomplete
+            multiple
+            id="position-filter"
+            options={positions}
+            value={localSelectedPositions}
+            onChange={handlePositionChange}
             size="small"
-            fullWidth
-            InputProps={{
-              ...params.InputProps,
-              sx: { borderRadius: 1 }
-            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="outlined"
+                placeholder="Select positions"
+                size="small"
+                fullWidth
+                InputProps={{
+                  ...params.InputProps,
+                  sx: { borderRadius: 1, fontSize: '0.875rem' }
+                }}
+              />
+            )}
+            renderTags={() => null} // Don't render tags inside the input
+            sx={{ flex: 1 }}
           />
-        )}
-        renderTags={() => null} // Don't render tags inside the input
-        sx={{ mb: 2 }}
-      />
-      
-      {/* Selected positions as chips */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-        {localSelectedPositions.length > 0 ? (
-          localSelectedPositions.map((position) => (
-            <Chip
-              key={position}
-              label={position}
-              onDelete={() => handleRemovePosition(position)}
-              size="small"
-              color="primary"
-              variant="outlined"
-              sx={{ 
-                borderRadius: 1,
-                '& .MuiChip-deleteIcon': {
-                  color: alpha(theme.palette.primary.main, 0.7),
-                  '&:hover': {
-                    color: theme.palette.primary.main
+          
+          <Button 
+            variant="contained" 
+            size="small" 
+            onClick={handleApplyFilter}
+            sx={{ borderRadius: 1, height: 32, minWidth: 'auto', px: 1 }}
+          >
+            Apply
+          </Button>
+        </Stack>
+        
+        {/* Selected positions as chips */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+          {localSelectedPositions.length > 0 ? (
+            localSelectedPositions.map((position) => (
+              <Chip
+                key={position}
+                label={position}
+                onDelete={() => handleRemovePosition(position)}
+                size="small"
+                color="primary"
+                variant="outlined"
+                sx={{ 
+                  borderRadius: 1,
+                  height: 24,
+                  fontSize: '0.75rem',
+                  '& .MuiChip-deleteIcon': {
+                    width: 16,
+                    height: 16,
+                    color: alpha(theme.palette.primary.main, 0.7),
+                    '&:hover': {
+                      color: theme.palette.primary.main
+                    }
                   }
-                }
-              }}
-            />
-          ))
-        ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-            No positions selected
-          </Typography>
+                }}
+              />
+            ))
+          ) : (
+            <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+              No positions selected
+            </Typography>
+          )}
+        </Box>
+        
+        {localSelectedPositions.length > 0 && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button 
+              variant="text" 
+              size="small" 
+              onClick={handleClearFilter}
+              sx={{ borderRadius: 1, p: 0, minHeight: 'auto', fontSize: '0.75rem' }}
+            >
+              Clear All
+            </Button>
+          </Box>
         )}
-      </Box>
-      
-      <Divider sx={{ mb: 2 }} />
-      
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button 
-          variant="outlined" 
-          size="small" 
-          onClick={handleClearFilter}
-          sx={{ borderRadius: 1 }}
-        >
-          Clear All
-        </Button>
-        <Button 
-          variant="contained" 
-          size="small" 
-          onClick={handleApplyFilter}
-          sx={{ borderRadius: 1 }}
-        >
-          Apply Filter
-        </Button>
-      </Box>
-    </Popover>
+      </Paper>
+    </Collapse>
   );
 };
 

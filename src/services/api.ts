@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_URL = 'http://localhost:5000';
 
@@ -37,10 +37,35 @@ const api = {
   },
   
   add: async (employee: Employee) => {
-    // Remove any existing ID to let the server generate one
-    const { ...employeeWithoutId } = employee;
-    const response = await axios.post(`${API_URL}/employees`, employeeWithoutId);
-    return response.data;
+    // Generate a new unique ID for the employee
+    const allEmployees = await api.getAll();
+    const maxId = Math.max(0, ...allEmployees.map((emp: Employee) => emp.id || 0));
+    const newId = maxId + 1;
+    
+    // Create a new employee object with the generated ID
+    const employeeWithId = {
+      ...employee,
+      id: newId,
+      // Ensure addresses have proper IDs
+      addresses: employee.addresses.map((address, index) => ({
+        ...address,
+        id: address.id || index + 1
+      }))
+    };
+    
+    console.log('Sending to server:', JSON.stringify(employeeWithId, null, 2));
+    
+    try {
+      const response = await axios.post(`${API_URL}/employees`, employeeWithId);
+      return response.data;
+    } catch (error: Error | unknown) {
+      if (error instanceof Error) {
+        console.error('Server response error:', (error as AxiosError).response?.data || error.message);
+      } else {
+        console.error('Server response error:', error);
+      }
+      throw error;
+    }
   },
   
   update: async (employee: Employee) => {

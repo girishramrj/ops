@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import { z } from 'zod';
 import {
   Box,
   Button,
@@ -8,26 +11,27 @@ import {
   TextField,
   Typography,
   Alert,
-  IconButton,
   Divider,
-  Card,
-  CardContent,
   Container,
-  Chip,
   useTheme,
   alpha,
   Autocomplete,
-  Stack
+  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar
 } from '@mui/material';
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
   Add as AddIcon,
-  Delete as DeleteIcon,
   Person as PersonIcon,
   Home as HomeIcon
 } from '@mui/icons-material';
 import api, { Employee } from '../services/api';
+import AddressTable from './AddressTable';
 
 // Define address interface
 interface Address {
@@ -68,6 +72,33 @@ const positionOptions = [
   'Customer Support Specialist'
 ];
 
+// Address validation schema
+const addressSchema = Yup.object().shape({
+  street: Yup.string().required('Street address is required'),
+  city: Yup.string().required('City is required'),
+  state: Yup.string().required('State is required'),
+  zipCode: Yup.string().required('Zip code is required'),
+  isDefault: Yup.boolean()
+});
+
+// Define Zod schema for personal information validation
+const personalInfoSchema = z.object({
+  name: z.string()
+    .min(1, "Name is required")
+    .regex(/^[A-Za-z\s]+$/, "Name must contain only alphabets"),
+  email: z.string()
+    .min(1, "Email is required")
+    .email("Invalid email format")
+    .refine(email => email.includes('@'), {
+      message: "Email must contain @ symbol"
+    }),
+  phone: z.string()
+    .min(1, "Phone number is required")
+    .length(10, "Phone number must be exactly 10 digits")
+    .regex(/^\d+$/, "Phone number must contain only digits"),
+  position: z.string().min(1, "Position is required")
+});
+
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -81,7 +112,84 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
     addresses: [{ id: 1, street: '', city: '', state: '', zipCode: '', isDefault: true }]
   });
 
+  // Add these state variables for the address dialog
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(null);
+  const [currentAddress, setCurrentAddress] = useState<Address>({
+    id: 0,
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    isDefault: false
+  });
+  
+  // Add state for Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
   const isEditMode = !!id;
+
+  // Add the handleEditAddress function
+  const handleEditAddress = (index: number) => {
+    setEditingAddressIndex(index);
+    setCurrentAddress({...formData.addresses[index]});
+    setAddressDialogOpen(true);
+  };
+
+  // Add the handleAddNewAddress function properly inside the component
+  const handleAddNewAddress = () => {
+    const newId = Math.max(0, ...formData.addresses.map(a => a.id)) + 1;
+    setEditingAddressIndex(null);
+    setCurrentAddress({
+      id: newId,
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      isDefault: formData.addresses.length === 0 // Make it default if it's the first address
+    });
+    setAddressDialogOpen(true);
+  };
+
+  // Handle saving address from Formik form
+  const handleSaveAddress = (values: Address) => {
+    let updatedAddresses: Address[];
+    
+    if (editingAddressIndex !== null) {
+      // Update existing address
+      updatedAddresses = formData.addresses.map((address, index) => {
+        if (index === editingAddressIndex) {
+          return values;
+        }
+        // If we're setting a new default, make sure others are not default
+        if (values.isDefault && address.isDefault) {
+          return { ...address, isDefault: false };
+        }
+        return address;
+      });
+    } else {
+      // Add new address
+      updatedAddresses = [...formData.addresses];
+      
+      // If the new address is default, update other addresses
+      if (values.isDefault) {
+        updatedAddresses = updatedAddresses.map(address => ({
+          ...address,
+          isDefault: false
+        }));
+      }
+      
+      updatedAddresses.push(values);
+    }
+    
+    setFormData({
+      ...formData,
+      addresses: updatedAddresses
+    });
+    
+    setAddressDialogOpen(false);
+  };
 
   useEffect(() => {
     if (!isEditMode || !id) {
@@ -133,27 +241,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
     setFormData({ ...formData, position: newValue || '' });
   };
 
-  const handleAddressChange = (index: number, field: keyof Address, value: string) => {
-    const updatedAddresses = formData.addresses?.map((address, i) => {
-      if (i === index) {
-        return { ...address, [field]: value };
-      }
-      return address;
-    });
-    
-    setFormData({ ...formData, addresses: updatedAddresses });
-  };
-
-  const handleAddAddress = () => {
-    const newId = Math.max(0, ...formData.addresses!.map(a => a.id)) + 1;
-    setFormData({
-      ...formData,
-      addresses: [
-        ...formData.addresses!,
-        { id: newId, street: '', city: '', state: '', zipCode: '', isDefault: false }
-      ]
-    });
-  };
+  
 
   const handleRemoveAddress = (index: number) => {
     // Don't remove if it's the only address
@@ -182,29 +270,131 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Reset error state
+    setError(null);
+    
+    // Validate with Zod
     try {
-      if (isEditMode && id) {
-        // Ensure ID is a valid number
-        const employeeId = parseInt(id);
-        if (isNaN(employeeId)) {
-          setError('Invalid employee ID');
-          return;
+      const validationResult = personalInfoSchema.safeParse({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        position: formData.position
+      });
+      
+      if (!validationResult.success) {
+        // Extract and display the first error message
+        const formattedErrors = validationResult.error.format();
+        const errorMessages = [];
+        
+        if (formattedErrors.name?._errors) {
+          errorMessages.push(formattedErrors.name._errors[0]);
+        }
+        if (formattedErrors.email?._errors) {
+          errorMessages.push(formattedErrors.email._errors[0]);
+        }
+        if (formattedErrors.phone?._errors) {
+          errorMessages.push(formattedErrors.phone._errors[0]);
+        }
+        if (formattedErrors.position?._errors) {
+          errorMessages.push(formattedErrors.position._errors[0]);
         }
         
-        await api.update({ ...formData, id: employeeId });
-      } else {
-        await api.add(formData);
+        setError(errorMessages.join(', '));
+        return;
       }
       
-      if (onSubmitSuccess) {
-        onSubmitSuccess();
-      } else {
-        navigate('/');
+      // Clean up addresses data - remove empty addresses
+      const cleanedAddresses = formData.addresses.filter(addr => 
+        addr.street.trim() !== '' || 
+        addr.city.trim() !== '' || 
+        addr.state.trim() !== '' || 
+        addr.zipCode.trim() !== ''
+      );
+      
+      // Ensure at least one address exists
+      const addressesToSubmit = cleanedAddresses.length > 0 
+        ? cleanedAddresses 
+        : [{ id: 1, street: '', city: '', state: '', zipCode: '', isDefault: true }];
+      
+      // Prepare the data for submission
+      const dataToSubmit = {
+        ...formData,
+        addresses: addressesToSubmit
+      };
+      
+      // Check if email is unique (only for new employees)
+      // if (!isEditMode) {
+      //   try {
+      //     // This assumes your API has a method to check if an email exists
+      //     // You may need to implement this in your API service
+      //     const emailExists = await api.checkEmailExists(formData.email);
+      //     if (emailExists) {
+      //       setError('Email address is already in use. Please use a different email.');
+      //       return;
+      //     }
+      //   } catch (error) {
+      //     console.error('Error checking email uniqueness:', error);
+      //     // Continue with submission if the check fails
+      //   }
+      // }
+      
+      try {
+        if (isEditMode && id) {
+          // Ensure ID is a valid number
+          const employeeId = parseInt(id);
+          if (isNaN(employeeId)) {
+            setError('Invalid employee ID');
+            return;
+          }
+          
+          await api.update({ ...dataToSubmit, id: employeeId });
+          // Show success message
+          setSnackbarMessage(`Employee ${formData.name} updated successfully!`);
+          setSnackbarOpen(true);
+        } else {
+          await api.add(dataToSubmit);
+          // Show success message
+          setSnackbarMessage(`Employee ${formData.name} added successfully!`);
+          setSnackbarOpen(true);
+        }
+        
+        // Set a timeout to allow the snackbar to be visible before navigating away
+        setTimeout(() => {
+          if (onSubmitSuccess) {
+            onSubmitSuccess();
+          } else {
+            navigate('/');
+          }
+        }, 1500);
+      } catch (error: any) {
+        console.error(`Error ${isEditMode ? 'updating' : 'adding'} employee:`, error);
+        
+        // More detailed error message
+        let errorMessage = `Failed to ${isEditMode ? 'update' : 'add'} employee. `;
+        if (error.response) {
+          errorMessage += `Server responded with status ${error.response.status}: ${error.response.data?.message || 'Unknown error'}`;
+        } else if (error.request) {
+          errorMessage += 'No response received from server. Please check your connection.';
+        } else {
+          errorMessage += error.message || 'Unknown error occurred.';
+        }
+        
+        setError(errorMessage);
       }
     } catch (error) {
-      console.error(`Error ${isEditMode ? 'updating' : 'adding'} employee:`, error);
-      setError(`Failed to ${isEditMode ? 'update' : 'add'} employee. Please try again.`);
+      console.error('Validation error:', error);
+      setError('An unexpected error occurred during validation.');
     }
+  };
+
+  // Add handler for closing the snackbar
+  const handleSnackbarClose = (_event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
   };
 
   if (loading) return (
@@ -344,6 +534,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
             </Stack>
           </Box>
           
+          {/* Addresses section - modified to use AddressTable */}
           <Box sx={{ mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -353,63 +544,121 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
                 </Typography>
               </Box>
               <Button 
-                startIcon={<AddIcon />} 
+                aria-label="Add Address"
                 variant="contained" 
-                onClick={handleAddAddress}
+                onClick={handleAddNewAddress}
                 size="small"
                 sx={{ 
                   borderRadius: 1,
                   boxShadow: 2,
+                  minWidth: 'auto',
+                  p: 1
                 }}
               >
-                Add Address
+                <AddIcon />
               </Button>
             </Box>
             <Divider sx={{ mb: 3 }} />
             
-            <Stack spacing={3}>
-              {formData.addresses?.map((address, index) => (
-                <Card 
-                  key={address.id} 
-                  variant="outlined" 
-                  sx={{ 
-                    borderRadius: 2,
-                    borderWidth: 2,
-                    borderColor: address.isDefault ? 'primary.main' : alpha(theme.palette.divider, 0.8),
-                    position: 'relative',
-                    overflow: 'visible', // Changed from 'hidden' to 'visible' to prevent chip clipping
-                    transition: 'all 0.2s ease-in-out',
-                    boxShadow: address.isDefault ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}` : '0 2px 8px rgba(0,0,0,0.05)',
-                    '&:hover': {
-                      boxShadow: address.isDefault 
-                        ? `0 6px 16px ${alpha(theme.palette.primary.main, 0.25)}` 
-                        : '0 4px 12px rgba(0,0,0,0.1)'
-                    }
-                  }}
-                >
-                  <CardContent sx={{ p: 3, pt: address.isDefault ? 5 : 3 }}> {/* Added top padding when default */}
-                    {address.isDefault && (
-                      <Chip
-                        label="Default"
-                        color="primary"
-                        size="small"
-                        sx={{ 
-                          position: 'absolute', 
-                          top: -12, // Changed from 12 to -12 to position above the card
-                          right: 12,
-                          fontWeight: 'bold',
-                          zIndex: 1, // Added to ensure chip appears above other elements
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)' // Added subtle shadow
-                        }}
-                      />
-                    )}
-                    
-                    <Stack spacing={3}>
+            {/* Address Table */}
+            <AddressTable 
+              addresses={formData.addresses}
+              onEdit={handleEditAddress}
+              onDelete={handleRemoveAddress}
+              onSetDefault={handleSetDefaultAddress}
+            />
+          </Box>
+          
+          <Divider sx={{ my: 4 }} />
+          
+          {/* Form buttons - unchanged */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button
+              type="button"
+              variant="outlined"
+              color="inherit"
+              aria-label="Cancel"
+              onClick={() => navigate('/')}
+              sx={{ 
+                borderRadius: 1,
+                minWidth: 'auto',
+                p: 1.5
+              }}
+            >
+              <CancelIcon />
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              aria-label={isEditMode ? 'Update Employee' : 'Save Employee'}
+              sx={{ 
+                borderRadius: 1,
+                minWidth: 'auto',
+                p: 1.5,
+                boxShadow: 2
+              }}
+            >
+              <SaveIcon />
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
+      
+      {/* Address Edit Dialog with Formik */}
+      <Dialog 
+        open={addressDialogOpen} 
+        onClose={() => setAddressDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingAddressIndex !== null ? 'Edit Address' : 'Add New Address'}
+        </DialogTitle>
+        <DialogContent>
+          <Formik
+            initialValues={currentAddress}
+            validationSchema={addressSchema}
+            onSubmit={(values) => {
+              handleSaveAddress(values);
+            }}
+            enableReinitialize
+          >
+            {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
+              <Form>
+                <Box sx={{ pt: 1 }}>
+                  <Stack spacing={3}>
+                    <Box>
                       <TextField
                         fullWidth
+                        id="street"
+                        name="street"
                         label="Street Address"
-                        value={address.street}
-                        onChange={(e) => handleAddressChange(index, 'street', e.target.value)}
+                        value={values.street}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.street && Boolean(errors.street)}
+                        helperText={touched.street && errors.street}
+                        required
+                        variant="outlined"
+                        autoFocus
+                        InputProps={{
+                          sx: { borderRadius: 1 }
+                        }}
+                      />
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                      <TextField
+                        fullWidth
+                        id="city"
+                        name="city"
+                        label="City"
+                        value={values.city}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.city && Boolean(errors.city)}
+                        helperText={touched.city && errors.city}
                         required
                         variant="outlined"
                         InputProps={{
@@ -417,112 +666,114 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
                         }}
                       />
                       
-                      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                      <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField
-                          fullWidth
-                          label="City"
-                          value={address.city}
-                          onChange={(e) => handleAddressChange(index, 'city', e.target.value)}
+                          id="state"
+                          name="state"
+                          label="State"
+                          value={values.state}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.state && Boolean(errors.state)}
+                          helperText={touched.state && errors.state}
                           required
                           variant="outlined"
                           InputProps={{
                             sx: { borderRadius: 1 }
                           }}
+                          sx={{ width: { xs: '100%', sm: '120px' } }}
                         />
                         
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                          <TextField
-                            label="State"
-                            value={address.state}
-                            onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
-                            required
-                            variant="outlined"
-                            InputProps={{
-                              sx: { borderRadius: 1 }
-                            }}
-                            sx={{ width: { xs: '100%', sm: '120px' } }}
-                          />
-                          
-                          <TextField
-                            label="Zip Code"
-                            value={address.zipCode}
-                            onChange={(e) => handleAddressChange(index, 'zipCode', e.target.value)}
-                            required
-                            variant="outlined"
-                            InputProps={{
-                              sx: { borderRadius: 1 }
-                            }}
-                            sx={{ width: { xs: '100%', sm: '120px' } }}
-                          />
-                        </Box>
-                      </Box>
-                      
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                        {!address.isDefault && (
-                          <Button 
-                            size="small" 
-                            onClick={() => handleSetDefaultAddress(index)}
-                            color="primary"
-                            variant="outlined"
-                            sx={{ borderRadius: 1 }}
-                          >
-                            Set as Default
-                          </Button>
-                        )}
-                        <IconButton 
-                          color="error" 
-                          onClick={() => handleRemoveAddress(index)}
-                          disabled={formData.addresses?.length === 1}
-                          size="small"
-                          sx={{ 
-                            ml: 'auto',
-                            bgcolor: alpha(theme.palette.error.main, 0.1),
-                            '&:hover': {
-                              bgcolor: alpha(theme.palette.error.main, 0.2),
-                            }
+                        <TextField
+                          id="zipCode"
+                          name="zipCode"
+                          label="Zip Code"
+                          value={values.zipCode}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={touched.zipCode && Boolean(errors.zipCode)}
+                          helperText={touched.zipCode && errors.zipCode}
+                          required
+                          variant="outlined"
+                          InputProps={{
+                            sx: { borderRadius: 1 }
                           }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                          sx={{ width: { xs: '100%', sm: '120px' } }}
+                        />
                       </Box>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}
-            </Stack>
-          </Box>
-          
-          <Divider sx={{ my: 4 }} />
-          
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button
-              type="button"
-              variant="outlined"
-              startIcon={<CancelIcon />}
-              onClick={() => navigate('/')}
-              sx={{ 
-                borderRadius: 1,
-                px: 3
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              startIcon={<SaveIcon />}
-              sx={{ 
-                borderRadius: 1,
-                px: 3,
-                boxShadow: 2
-              }}
-            >
-              {isEditMode ? 'Update' : 'Save'} Employee
-            </Button>
-          </Box>
-        </Box>
-      </Paper>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Button
+                        type="button"
+                        variant={values.isDefault ? "contained" : "outlined"}
+                        color={values.isDefault ? "primary" : "inherit"}
+                        onClick={() => setFieldValue('isDefault', !values.isDefault)}
+                        sx={{ borderRadius: 1 }}
+                        aria-label={values.isDefault ? "Default Address" : "Set as Default"}
+                      >
+                        {values.isDefault ? "Default Address" : "Set as Default"}
+                      </Button>
+                      {values.isDefault && (
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                          This address will be used as the primary contact address
+                        </Typography>
+                      )}
+                    </Box>
+                  </Stack>
+                </Box>
+                
+                <DialogActions sx={{ px: 3, pb: 3, mt: 3 }}>
+                  <Button 
+                    onClick={() => setAddressDialogOpen(false)} 
+                    color="inherit"
+                    variant="outlined"
+                    aria-label="Cancel"
+                    sx={{ 
+                      borderRadius: 1,
+                      minWidth: 'auto',
+                      p: 1.5
+                    }}
+                  >
+                    <CancelIcon />
+                  </Button>
+                  <Button 
+                    type="submit"
+                    color="primary"
+                    variant="contained"
+                    aria-label="Save Address"
+                    sx={{ 
+                      borderRadius: 1,
+                      minWidth: 'auto',
+                      p: 1.5,
+                      boxShadow: 2
+                    }}
+                  >
+                    <SaveIcon />
+                  </Button>
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity="success" 
+          variant="filled"
+          sx={{ width: '100%', boxShadow: 3 }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
