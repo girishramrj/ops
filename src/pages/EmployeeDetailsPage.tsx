@@ -85,7 +85,7 @@ const EmployeeDetailsPage: React.FC = () => {
             href="#" 
             onClick={(e) => {
               e.preventDefault();
-              navigate('/');
+              navigate('/employees');
             }}
           >
             Employee List

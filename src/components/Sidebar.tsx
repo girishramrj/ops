@@ -37,8 +37,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open, drawerWidth, darkMode, handleDr
   // const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const menuItems = [
-    { text: 'Home', icon: <HomeIcon />, path: '/home' },
-    { text: 'Employee List', icon: <PeopleIcon />, path: '/' },
+    { text: 'Home', icon: <HomeIcon />, path: '/' },
+    { text: 'Employee List', icon: <PeopleIcon />, path: '/employees' },
     { text: 'Add Employee', icon: <PersonAddIcon />, path: '/add' },
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     // { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }

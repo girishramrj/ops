@@ -40,7 +40,7 @@ const EmployeeDetailsContent: React.FC<EmployeeDetailsContentProps> = ({ employe
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton 
             color="inherit" 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/employees')}
             sx={{ mr: 2 }}
           >
             <ArrowBackIcon />

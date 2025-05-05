@@ -59,10 +59,21 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   // Custom action button renderer
   const renderActions = (params: GridRenderCellParams) => {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        width: '100%',
+        height: '100%'
+      }}>
         <IconButton
           size="small"
           onClick={(event) => handleMenuOpen(event, params.row)}
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
         >
           <MoreVertIcon fontSize="small" />
         </IconButton>
@@ -75,7 +86,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
     {
       field: 'selection',
       headerName: '',
-      width: 50,
+      width: 63,
       sortable: false,
       filterable: false,
       renderCell: renderCheckbox,

@@ -3112,36 +3112,11 @@
       ]
     },
     {
-      "id": 96,
-      "name": "Aayush Mander",
-      "email": "mahajanshray@ganesh.biz",
-      "position": "Developer",
-      "phone": "09712138838",
-      "addresses": [
-        {
-          "id": 1,
-          "street": "H.No. 007\nViswanathan Street",
-          "city": "Dhanbad",
-          "state": "Punjab",
-          "zipCode": "100128",
-          "isDefault": false
-        },
-        {
-          "id": 2,
-          "street": "08\nAgate Path",
-          "city": "Hazaribagh",
-          "state": "Telangana",
-          "zipCode": "819587",
-          "isDefault": true
-        }
-      ]
-    },
-    {
       "id": 97,
       "name": "Adira Sachar",
       "email": "wgera@srinivas.biz",
       "position": "HR",
-      "phone": "04823364279",
+      "phone": "0987654321",
       "addresses": [
         {
           "id": 1,
@@ -3198,39 +3173,6 @@
           "city": "Burhanpur",
           "state": "Tripura",
           "zipCode": "994862",
-          "isDefault": false
-        }
-      ]
-    },
-    {
-      "id": 99,
-      "name": "Aarav Gaba",
-      "email": "jayanramakrishnan@hotmail.com",
-      "position": "UI/UX Designer",
-      "phone": "03815720865",
-      "addresses": [
-        {
-          "id": 2,
-          "street": "11/479\nSura Street",
-          "city": "Bhiwandi",
-          "state": "Tamil Nadu",
-          "zipCode": "022887",
-          "isDefault": true
-        },
-        {
-          "id": 3,
-          "street": "3-267, 1St Street, Subramanian Nagar",
-          "city": "Chennai",
-          "state": "Tamil Nadu",
-          "zipCode": "600091",
-          "isDefault": false
-        },
-        {
-          "id": 4,
-          "street": "3-267, 1St Street, Subramanian Nagar",
-          "city": "Chennai",
-          "state": "Tamil Nadu",
-          "zipCode": "600091",
           "isDefault": false
         }
       ]
@@ -3405,10 +3347,10 @@
       "id": 110
     },
     {
-      "name": "Aaaa",
-      "email": "girishram02@gmail.com",
-      "position": "Senior Software Engineer",
-      "phone": "1233313111",
+      "name": "Girish Ram",
+      "email": "yevagen478@kytstore.com",
+      "position": "Software Engineer",
+      "phone": "1315634777",
       "addresses": [
         {
           "id": 1,
@@ -3419,7 +3361,211 @@
           "isDefault": true
         }
       ],
-      "id": 111
+      "id": 112
+    },
+    {
+      "name": "Kaushal Francis",
+      "email": "kfc@gmail.com",
+      "position": "Project Manager",
+      "phone": "1234567890",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 113
+    },
+    {
+      "name": "Girish Ram",
+      "email": "yevagen478@kytstore.com",
+      "position": "Graphic Designer",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "",
+          "city": "",
+          "state": "",
+          "zipCode": "",
+          "isDefault": true
+        }
+      ],
+      "id": 114
+    },
+    {
+      "name": "Girish Ram",
+      "email": "213@ewd.asd",
+      "position": "Data Scientist",
+      "phone": "8905672341",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "",
+          "city": "",
+          "state": "",
+          "zipCode": "",
+          "isDefault": true
+        }
+      ],
+      "id": 115
+    },
+    {
+      "name": "Aaaaabbb",
+      "email": "girishram02@gmail.com",
+      "position": "Graphic Designer",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 117
+    },
+    {
+      "name": "Girish Ram",
+      "email": "yevagen478@kytstore.com",
+      "position": "Data Scientist",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 119
+    },
+    {
+      "name": "Aaaawa",
+      "email": "yevagen478@kytstore.com",
+      "position": "Graphic Designer",
+      "phone": "5432167901",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 120
+    },
+    {
+      "name": "Aaaaujg Iukh",
+      "email": "wqe@sf.sfd",
+      "position": "Graphic Designer",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 121
+    },
+    {
+      "name": "Aaaa Gg  F",
+      "email": "joferej336@leacore.com",
+      "position": "Graphic Designer",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 122
+    },
+    {
+      "name": "Aapapa A",
+      "email": "girishram02@gmail.com",
+      "position": "Graphic Designer",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 123
+    },
+    {
+      "name": "Girish Ram",
+      "email": "girishram02@gmail.com",
+      "position": "Graphic Designer",
+      "phone": "2345435244",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "",
+          "city": "",
+          "state": "",
+          "zipCode": "",
+          "isDefault": true
+        }
+      ],
+      "id": 124
+    },
+    {
+      "name": "K",
+      "email": "girishram02@gmail.com",
+      "position": "Sales Representative",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 125
+    },
+    {
+      "name": "Girish Ram",
+      "email": "girishram02@gmail.com",
+      "position": "Product Manager",
+      "phone": "2345435246",
+      "addresses": [
+        {
+          "id": 1,
+          "street": "3-267, 1St Street, Subramanian Nagar",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "zipCode": "600091",
+          "isDefault": true
+        }
+      ],
+      "id": 126
     }
   ]
 }

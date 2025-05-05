@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Formik, useFormik } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { z } from 'zod';
 import {
@@ -81,7 +81,7 @@ const addressSchema = Yup.object().shape({
   isDefault: Yup.boolean()
 });
 
-// Define Zod schema for personal information validation (kept for compatibility)
+// Define Zod schema for personal information validation
 const personalInfoSchema = z.object({
   name: z.string()
     .min(1, "Name is required")
@@ -97,22 +97,6 @@ const personalInfoSchema = z.object({
     .length(10, "Phone number must be exactly 10 digits")
     .regex(/^\d+$/, "Phone number must contain only digits"),
   position: z.string().min(1, "Position is required")
-});
-
-// Yup validation schema for personal information
-const personalInfoValidationSchema = Yup.object({
-  name: Yup.string()
-    .required('Name is required')
-    .matches(/^[A-Za-z\s]+$/, 'Name must contain only alphabets'),
-  email: Yup.string()
-    .required('Email is required')
-    .email('Invalid email format'),
-  phone: Yup.string()
-    .required('Phone number is required')
-    .length(10, 'Phone number must be exactly 10 digits')
-    .matches(/^\d+$/, 'Phone number must contain only digits'),
-  position: Yup.string()
-    .required('Position is required')
 });
 
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
@@ -153,31 +137,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   };
-
-  // Initialize Formik
-  const formik = useFormik({
-    initialValues: {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      position: formData.position
-    },
-    validationSchema: personalInfoValidationSchema,
-    enableReinitialize: true,
-    onSubmit: (values) => {
-      // Update formData with Formik values
-      const updatedFormData = {
-        ...formData,
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        position: values.position
-      };
-      
-      // Call the existing submit handler with updated data
-      handleSubmit(undefined, updatedFormData);
-    }
-  });
 
   // Add the handleEditAddress function
   const handleEditAddress = (index: number) => {
@@ -281,6 +240,24 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
     fetchEmployee();
   }, [id, isEditMode]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    // If the field is "name", capitalize the first letter of each word
+    if (name === 'name') {
+      setFormData({ ...formData, [name]: capitalizeWords(value) });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  // Handle position change from Autocomplete
+  const handlePositionChange = (_event: React.SyntheticEvent, newValue: string | null) => {
+    setFormData({ ...formData, position: newValue || '' });
+  };
+
+  
+
   const handleRemoveAddress = (index: number) => {
     // Don't remove if it's the only address
     if (formData.addresses?.length === 1) {
@@ -306,15 +283,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
     setFormData({ ...formData, addresses: updatedAddresses });
   };
 
-  const handleSubmit = async (e?: React.FormEvent, updatedData?: typeof formData) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    // Use the updated data if provided, otherwise use the current formData
-    const dataToSubmit = updatedData || formData;
-    
-    console.log('Form submission started with data:', dataToSubmit);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
     // Reset error state
     setError(null);
@@ -322,10 +292,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
     // Validate with Zod
     try {
       const validationResult = personalInfoSchema.safeParse({
-        name: dataToSubmit.name,
-        email: dataToSubmit.email,
-        phone: dataToSubmit.phone,
-        position: dataToSubmit.position
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        position: formData.position
       });
       
       if (!validationResult.success) {
@@ -351,7 +321,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
       }
       
       // Clean up addresses data - remove empty addresses
-      const cleanedAddresses = dataToSubmit.addresses.filter(addr => 
+      const cleanedAddresses = formData.addresses.filter(addr => 
         addr.street.trim() !== '' || 
         addr.city.trim() !== '' || 
         addr.state.trim() !== '' || 
@@ -364,10 +334,26 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
         : [{ id: 1, street: '', city: '', state: '', zipCode: '', isDefault: true }];
       
       // Prepare the data for submission
-      const finalDataToSubmit = {
-        ...dataToSubmit,
+      const dataToSubmit = {
+        ...formData,
         addresses: addressesToSubmit
       };
+      
+      // Check if email is unique (only for new employees)
+      // if (!isEditMode) {
+      //   try {
+      //     // This assumes your API has a method to check if an email exists
+      //     // You may need to implement this in your API service
+      //     const emailExists = await api.checkEmailExists(formData.email);
+      //     if (emailExists) {
+      //       setError('Email address is already in use. Please use a different email.');
+      //       return;
+      //     }
+      //   } catch (error) {
+      //     console.error('Error checking email uniqueness:', error);
+      //     // Continue with submission if the check fails
+      //   }
+      // }
       
       try {
         if (isEditMode && id) {
@@ -378,14 +364,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
             return;
           }
           
-          await api.update({ ...finalDataToSubmit, id: employeeId });
+          await api.update({ ...dataToSubmit, id: employeeId });
           // Show success message
-          setSnackbarMessage(`Employee ${finalDataToSubmit.name} updated successfully!`);
+          setSnackbarMessage(`Employee ${formData.name} updated successfully!`);
           setSnackbarOpen(true);
         } else {
-          await api.add(finalDataToSubmit);
+          await api.add(dataToSubmit);
           // Show success message
-          setSnackbarMessage(`Employee ${finalDataToSubmit.name} added successfully!`);
+          setSnackbarMessage(`Employee ${formData.name} added successfully!`);
           setSnackbarOpen(true);
         }
         
@@ -394,7 +380,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
           if (onSubmitSuccess) {
             onSubmitSuccess();
           } else {
-            navigate('/employees');
+            navigate('/');
           }
         }, 1500);
       } catch (error: any) {
@@ -481,178 +467,157 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
           </Alert>
         )}
         
-        <form onSubmit={formik.handleSubmit}>
-          <Box sx={{ p: 3 }}>
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
-                <PersonIcon color="primary" sx={{ mr: 1, mt: 0.5 }} />
-                <Typography variant="h6" fontWeight="500">Personal Information</Typography>
-              </Box>
-              <Divider sx={{ mb: 3 }} />
-              
-              <Stack spacing={3}>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                  <TextField
-                    fullWidth
-                    id="name"
-                    name="name"
-                    label="Full Name"
-                    value={formik.values.name}
-                    onChange={(e) => {
-                      // Apply capitalization
-                      const capitalizedValue = capitalizeWords(e.target.value);
-                      formik.setFieldValue('name', capitalizedValue);
-                    }}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.name && Boolean(formik.errors.name)}
-                    helperText={formik.touched.name && formik.errors.name}
-                    required
-                    variant="outlined"
-                    autoComplete="name"
-                    InputProps={{
-                      sx: { borderRadius: 1 }
-                    }}
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    id="email"
-                    name="email"
-                    label="Email Address"
-                    value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.email && Boolean(formik.errors.email)}
-                    helperText={formik.touched.email && formik.errors.email}
-                    required
-                    type="email"
-                    variant="outlined"
-                    autoComplete="email"
-                    InputProps={{
-                      sx: { borderRadius: 1 }
-                    }}
-                  />
-                </Box>
-                
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                  <Autocomplete
-                    id="position"
-                    options={positionOptions}
-                    value={formik.values.position || null}
-                    onChange={(_, newValue) => {
-                      formik.setFieldValue('position', newValue || '');
-                    }}
-                    freeSolo
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        name="position"
-                        label="Job Position"
-                        required
-                        variant="outlined"
-                        error={formik.touched.position && Boolean(formik.errors.position)}
-                        helperText={formik.touched.position && formik.errors.position}
-                        onBlur={formik.handleBlur}
-                        InputProps={{
-                          ...params.InputProps,
-                          sx: { borderRadius: 1 }
-                        }}
-                      />
-                    )}
-                    sx={{ width: '100%' }}
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    id="phone"
-                    name="phone"
-                    label="Phone Number"
-                    value={formik.values.phone}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.phone && Boolean(formik.errors.phone)}
-                    helperText={formik.touched.phone && formik.errors.phone}
-                    required
-                    variant="outlined"
-                    autoComplete="tel"
-                    InputProps={{
-                      sx: { borderRadius: 1 }
-                    }}
-                  />
-                </Box>
-              </Stack>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ p: 3 }}>
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+              <PersonIcon color="primary" sx={{ mr: 1, mt: 0.5 }} />
+              <Typography variant="h6" fontWeight="500">Personal Information</Typography>
             </Box>
+            <Divider sx={{ mb: 3 }} />
             
-            {/* Addresses section - modified to use AddressTable */}
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <HomeIcon color="primary" sx={{ mr: 1 }} />
-                  <Typography variant="h6" fontWeight="500">
-                    Addresses
-                  </Typography>
-                </Box>
-                <Button 
-                  aria-label="Add Address"
-                  variant="contained" 
-                  onClick={handleAddNewAddress}
-                  size="small"
-                  sx={{ 
-                    borderRadius: 1,
-                    boxShadow: 2,
-                    minWidth: 'auto',
-                    p: 1
+            <Stack spacing={3}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                <TextField
+                  fullWidth
+                  id="name"
+                  name="name"
+                  label="Full Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  variant="outlined"
+                  autoComplete="name"
+                  InputProps={{
+                    sx: { borderRadius: 1 }
                   }}
-                >
-                  <AddIcon />
-                </Button>
+                />
+                
+                <TextField
+                  fullWidth
+                  id="email"
+                  name="email"
+                  label="Email Address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  type="email"
+                  variant="outlined"
+                  autoComplete="email"
+                  InputProps={{
+                    sx: { borderRadius: 1 }
+                  }}
+                />
               </Box>
-              <Divider sx={{ mb: 3 }} />
               
-              {/* Address Table */}
-              <AddressTable 
-                addresses={formData.addresses}
-                onEdit={handleEditAddress}
-                onDelete={handleRemoveAddress}
-                onSetDefault={handleSetDefaultAddress}
-              />
-            </Box>
-            
-            <Divider sx={{ my: 4 }} />
-            
-            {/* Form buttons */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button
-                type="button"
-                variant="outlined"
-                color="inherit"
-                aria-label="Cancel"
-                onClick={() => navigate('/employees')}
-                sx={{ 
-                  borderRadius: 1,
-                  minWidth: 'auto',
-                  p: 1.5
-                }}
-              >
-                <CancelIcon />
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                aria-label={isEditMode ? 'Update Employee' : 'Save Employee'}
-                sx={{ 
-                  borderRadius: 1,
-                  minWidth: 'auto',
-                  p: 1.5,
-                  boxShadow: 2
-                }}
-              >
-                <SaveIcon />
-              </Button>
-            </Box>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                <Autocomplete
+                  id="position"
+                  options={positionOptions}
+                  value={formData.position || null}
+                  onChange={handlePositionChange}
+                  freeSolo
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Job Position"
+                      required
+                      variant="outlined"
+                      InputProps={{
+                        ...params.InputProps,
+                        sx: { borderRadius: 1 }
+                      }}
+                    />
+                  )}
+                  sx={{ width: '100%' }}
+                />
+                
+                <TextField
+                  fullWidth
+                  id="phone"
+                  name="phone"
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  variant="outlined"
+                  autoComplete="tel"
+                  InputProps={{
+                    sx: { borderRadius: 1 }
+                  }}
+                />
+              </Box>
+            </Stack>
           </Box>
-        </form>
+          
+          {/* Addresses section - modified to use AddressTable */}
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <HomeIcon color="primary" sx={{ mr: 1 }} />
+                <Typography variant="h6" fontWeight="500">
+                  Addresses
+                </Typography>
+              </Box>
+              <Button 
+                aria-label="Add Address"
+                variant="contained" 
+                onClick={handleAddNewAddress}
+                size="small"
+                sx={{ 
+                  borderRadius: 1,
+                  boxShadow: 2,
+                  minWidth: 'auto',
+                  p: 1
+                }}
+              >
+                <AddIcon />
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 3 }} />
+            
+            {/* Address Table */}
+            <AddressTable 
+              addresses={formData.addresses}
+              onEdit={handleEditAddress}
+              onDelete={handleRemoveAddress}
+              onSetDefault={handleSetDefaultAddress}
+            />
+          </Box>
+          
+          <Divider sx={{ my: 4 }} />
+          
+          {/* Form buttons - unchanged */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button
+              type="button"
+              variant="outlined"
+              color="inherit"
+              aria-label="Cancel"
+              onClick={() => navigate('/')}
+              sx={{ 
+                borderRadius: 1,
+                minWidth: 'auto',
+                p: 1.5
+              }}
+            >
+              <CancelIcon />
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              aria-label={isEditMode ? 'Update Employee' : 'Save Employee'}
+              sx={{ 
+                borderRadius: 1,
+                minWidth: 'auto',
+                p: 1.5,
+                boxShadow: 2
+              }}
+            >
+              <SaveIcon />
+            </Button>
+          </Box>
+        </Box>
       </Paper>
       
       {/* Address Edit Dialog with Formik */}
@@ -808,6 +773,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ id, onSubmitSuccess }) => {
         </DialogContent>
       </Dialog>
       
+      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}

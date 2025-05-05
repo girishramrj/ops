@@ -140,7 +140,8 @@ const AppContent = () => {
             <Toolbar /> {/* This creates space below the app bar */}
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
-                <Route path="/" element={<EmployeeListPage />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/employees" element={<EmployeeListPage />} />
                 <Route path="/add" element={<EmployeeFormPage />} />
                 <Route path="/edit/:id" element={<EmployeeFormPage />} />
                 <Route path="/employee/:id" element={<EmployeeDetailsPage />} />
