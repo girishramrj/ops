@@ -24,7 +24,7 @@ const LoadingFallback = () => (
 // Main app content separated to use context
 const AppContent = () => {
   const { darkMode, toggleDarkMode } = useThemeContext();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const drawerWidth = 240;
   
   const theme = useMemo(() => createTheme({
@@ -96,7 +96,7 @@ const AppContent = () => {
     if (isMobile) {
       setSidebarOpen(false);
     } else {
-      setSidebarOpen(true);
+      setSidebarOpen(false);
     }
   }, [isMobile]);
 
